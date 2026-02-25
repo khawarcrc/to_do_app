@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeSync } from "@/components/ThemeSync";
+import { ToastContainer } from "@/components/ToastContainer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Todo List – Stay Organized",
-  description: "Feature-rich todo list with priorities, due dates, and dark mode.",
+  title: "TodoFlow – Premium Task Management",
+  description: "Jira/Notion-inspired task management with Kanban, List & Calendar views.",
 };
 
 export default function RootLayout({
@@ -26,9 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-50 dark:bg-slate-900`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
       >
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeSync />
+        {children}
+        <ToastContainer />
       </body>
     </html>
   );
