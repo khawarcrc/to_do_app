@@ -1,216 +1,1007 @@
 ================================================================================
-  TODOFLOW - Next.js Todo List Application
-  Project Overview & Documentation
+  TODOFLOW  —  Premium Task Management Application
+  Complete Project Guide & Reference
 ================================================================================
 
-Created: February 25, 2026
-Stack: Next.js 16 (App Router) + TypeScript + Tailwind CSS v4
+Last Updated : February 25, 2026
+Project Name : TodoFlow
+Repository   : to-do-list (Next.js App Router)
+
+================================================================================
+  TABLE OF CONTENTS
+================================================================================
+
+  1.  Project Summary
+  2.  Technology Stack & Dependencies
+  3.  Full Folder & File Structure
+  4.  Architecture Overview
+  5.  State Management (Zustand Stores)
+  6.  Data Layer — JSON File Storage
+  7.  REST API Routes
+  8.  TypeScript Types & Constants
+  9.  UI Component Reference
+  10. Views — Kanban / List / Calendar
+  11. Task Modal (Create & Edit)
+  12. Command Palette
+  13. Sidebar & Filtering
+  14. Theme System (Dark / Light)
+  15. Toast Notification System
+  16. Design Token System (CSS Variables)
+  17. Complete Data Flow Walkthrough
+  18. Key User Flows (Step-by-Step)
+  19. How to Run & Build
+  20. Environment & Configuration Files
 
 
---------------------------------------------------------------------------------
-  WHAT WAS BUILT
---------------------------------------------------------------------------------
+================================================================================
+  1. PROJECT SUMMARY
+================================================================================
 
-A full-featured Todo List web application called "TodoFlow" with:
-  - Light / Dark theme toggle with localStorage persistence
-  - JSON file-based task storage (no database required)
-  - Full CRUD operations via REST API routes
-  - Priority system with visual indicators
-  - Filtering, sorting, and searching of tasks
-  - Time estimates and due date tracking
-  - Overdue task detection
-  - Statistics dashboard
-  - Responsive layout (mobile, tablet, desktop)
-  - Delete confirmation dialog
-  - Tag support on tasks
+TodoFlow is a full-featured, production-quality task management web application
+built with Next.js 16 and the App Router. It is inspired by the UI and UX of
+tools like Linear, Notion, and Jira.
 
-
---------------------------------------------------------------------------------
-  FOLDER STRUCTURE
---------------------------------------------------------------------------------
-
-to-do-list/
-│
-├── app/                          # Next.js App Router
-│   ├── globals.css               # Global styles, CSS variables, dark mode, animations
-│   ├── layout.tsx                # Root layout — mounts ThemeProvider
-│   ├── page.tsx                  # Main page (client component, wires everything together)
-│   └── api/
-│       └── tasks/
-│           ├── route.ts          # GET /api/tasks, POST /api/tasks
-│           └── [id]/
-│               └── route.ts     # GET, PUT, PATCH, DELETE /api/tasks/:id
-│
-├── components/                   # Reusable UI components
-│   ├── ThemeToggle.tsx           # Sun/Moon button for switching themes
-│   ├── PriorityBadge.tsx         # Colored badge showing task priority
-│   ├── TimeEstimate.tsx          # Displays time estimate + due date with overdue warning
-│   ├── StatsDashboard.tsx        # Task statistics cards + completion progress bar
-│   ├── FilterBar.tsx             # Search input + priority/status/date filters + sort
-│   ├── TaskCard.tsx              # Individual task card with edit/delete/toggle actions
-│   ├── TaskList.tsx              # Renders list of TaskCards, handles empty/loading states
-│   └── TaskForm.tsx              # Modal form for creating and editing tasks
-│
-├── contexts/
-│   └── ThemeContext.tsx          # React context for theme state + ThemeProvider
-│
-├── hooks/
-│   └── useTasks.ts               # Custom hook for API calls (fetch/add/edit/delete/toggle)
-│                                 # Also exports filterAndSortTasks() and computeStats()
-│
-├── lib/
-│   └── taskStorage.ts            # Server-side JSON file read/write with:
-│                                 #   - Write queue (concurrency-safe)
-│                                 #   - Auto backup (tasks.backup.json)
-│                                 #   - Input validation
-│                                 #   - CRUD: createTask, updateTask, deleteTask, toggleTaskStatus
-│
-├── types/
-│   └── index.ts                  # All TypeScript interfaces and constants:
-│                                 #   - Task interface
-│                                 #   - TaskFormData, FilterState, SortState, TaskStats
-│                                 #   - PRIORITY_CONFIG (labels, colors, emojis)
-│                                 #   - STATUS_CONFIG (labels, colors)
-│                                 #   - PRIORITY_ORDER (for sorting)
-│
-├── utils/
-│   └── index.ts                  # Utility functions:
-│                                 #   - formatMinutes(mins) → "1h 30m"
-│                                 #   - parseTimeInput("1h 30m") → 90 (minutes)
-│                                 #   - formatDateForInput(isoString) → datetime-local format
-│                                 #   - cn(...classes) → joined class string
-│
-└── data/
-    ├── tasks.json                # Live task storage file (auto-created)
-    └── tasks.backup.json         # Auto-backup created before each write
+Core Feature Set:
+  - Three view modes: Kanban Board, List View, Calendar View
+  - Drag-and-drop task cards between status columns (Kanban)
+  - Inline editing of status and priority (List view)
+  - Month-based calendar with tasks pinned to due dates
+  - Rich task creation / edit modal with properties panel
+  - Global command palette (Ctrl+K / Cmd+K) for search & quick actions
+  - Collapsible sidebar with navigation, priority filters, tag filters, and stats
+  - Full-text search across title, description, and tags
+  - Priority system: Critical / High / Medium / Low
+  - Status system: To Do / In Progress / Completed
+  - Due date, time estimate, and overdue detection
+  - Tag system (add/remove inline)
+  - Toast notifications for every create / update / delete action
+  - Dark / Light mode with system preference detection
+  - All data stored in a local JSON file — no database required
+  - Concurrent-write-safe storage with auto-backup
+  - TypeScript throughout with zero type errors
 
 
---------------------------------------------------------------------------------
-  TASK DATA STRUCTURE
---------------------------------------------------------------------------------
+================================================================================
+  2. TECHNOLOGY STACK & DEPENDENCIES
+================================================================================
 
-Each task has the following fields:
+  Runtime Dependencies:
+  Package                  Version      Purpose
+  -----------------------------------------------------------------------
+  next                     16.1.6       Framework (App Router, API Routes)
+  react                    19.2.3       UI library
+  react-dom                19.2.3       DOM renderer
+  zustand                  ^5.0.11      Global state management
+  @dnd-kit/core            ^6.3.1       Drag-and-drop core engine
+  @dnd-kit/sortable        ^10.0.0      Sortable list support for DnD
+  @dnd-kit/utilities       ^3.2.2       CSS transform utilities for DnD
+  date-fns                 ^4.1.0       Date formatting and comparisons
+  framer-motion            ^12.34.3     Animation library (installed)
+  uuid                     ^13.0.0      UUID v4 generation for task IDs
+  -----------------------------------------------------------------------
 
-  id           string       Unique UUID generated on creation
-  title        string       Required, max 200 characters
-  description  string?      Optional details
-  priority     enum         "critical" | "high" | "medium" | "low"
-  status       enum         "pending" | "in-progress" | "completed"
-  timeEstimate number       Estimated time in minutes (e.g. 90 = 1h 30m)
-  dueDate      string?      ISO 8601 date string (optional)
-  createdAt    string       ISO 8601 timestamp, set on creation
-  updatedAt    string       ISO 8601 timestamp, updated on every edit
-  completedAt  string?      ISO 8601 timestamp, set when marked complete
-  tags         string[]?    Optional array of tag labels
-  actualTime   number?      Optional actual time spent (minutes)
+  Dev Dependencies:
+  typescript               Static type checking
+  tailwindcss v4           Utility-first CSS (CSS-native, no config file)
+  @tailwindcss/postcss     PostCSS integration for Tailwind v4
+  eslint + eslint-next     Code linting
+  @types/node,react,uuid   TypeScript type definitions
+  -----------------------------------------------------------------------
 
-
---------------------------------------------------------------------------------
-  PRIORITY SYSTEM
---------------------------------------------------------------------------------
-
-  🔴 Critical  — Must do immediately  (red)
-  🟠 High      — Should do today      (orange)
-  🟡 Medium    — Should do this week  (yellow)
-  🔵 Low       — Can be postponed     (blue)
-
-
---------------------------------------------------------------------------------
-  API ROUTES
---------------------------------------------------------------------------------
-
-  GET    /api/tasks           — Fetch all tasks
-  POST   /api/tasks           — Create a new task (body: TaskFormData)
-  GET    /api/tasks/:id       — Fetch a single task by ID
-  PUT    /api/tasks/:id       — Update a task (body: Partial<TaskFormData>)
-  PATCH  /api/tasks/:id       — Toggle task status (pending ↔ completed)
-  DELETE /api/tasks/:id       — Delete a task
+  Node / Runtime Requirements:
+    - Node.js >= 18.x  (required by Next.js 16)
+    - npm >= 9.x
+    - No external database, no .env file required
 
 
---------------------------------------------------------------------------------
-  THEME SYSTEM
---------------------------------------------------------------------------------
+================================================================================
+  3. FULL FOLDER & FILE STRUCTURE
+================================================================================
 
-  - Tailwind CSS v4 custom variant: @custom-variant dark (&:where(.dark, .dark *))
-  - ThemeProvider (contexts/ThemeContext.tsx) reads localStorage on mount
-  - Applies/removes "dark" class on <html> element
-  - Falls back to system preference (prefers-color-scheme) if no stored preference
-  - ThemeToggle button shows moon icon (light mode) or sun icon (dark mode)
-  - Smooth transitions via CSS: transition: background-color 0.3s ease
+  to-do-list/
+  |
+  +-- app/                              # Next.js App Router root
+  |   +-- globals.css                   # Global styles + complete design token system
+  |   +-- layout.tsx                    # Root layout: fonts, ThemeSync, ToastContainer
+  |   +-- page.tsx                      # Main page: orchestrates all views and state
+  |   +-- api/
+  |       +-- tasks/
+  |           +-- route.ts              # GET  /api/tasks   (list all)
+  |           |                         # POST /api/tasks   (create)
+  |           +-- [id]/
+  |               +-- route.ts          # GET    /api/tasks/:id  (single)
+  |                                     # PUT    /api/tasks/:id  (full update)
+  |                                     # PATCH  /api/tasks/:id  (toggle status)
+  |                                     # DELETE /api/tasks/:id  (remove)
+  |
+  +-- components/                       # All client-side UI components
+  |   +-- TopBar.tsx                    # App header: logo, view switcher, Cmd+K, New Task
+  |   +-- Sidebar.tsx                   # Collapsible left navigation + filters + stats
+  |   +-- KanbanBoard.tsx               # Drag-and-drop board (3 columns)
+  |   +-- ListView.tsx                  # Tabular list with inline editing
+  |   +-- CalendarView.tsx              # Month grid calendar with task pills
+  |   +-- TaskModal.tsx                 # Rich create/edit modal with properties panel
+  |   +-- CommandPalette.tsx            # Cmd+K overlay: search tasks + quick actions
+  |   +-- ToastContainer.tsx            # Renders toast notifications from toastStore
+  |   +-- ThemeSync.tsx                 # Syncs themeStore to <html class="dark">
+  |   +-- ThemeToggle.tsx               # Sun/Moon toggle button
+  |   +-- PriorityBadge.tsx             # Colored badge (xs/sm/md sizes)
+  |   +-- TimeEstimate.tsx              # Formats and displays time estimate
+  |   +-- FilterBar.tsx                 # (legacy) search + filter bar
+  |   +-- StatsDashboard.tsx            # (legacy) stats display
+  |   +-- TaskCard.tsx                  # (legacy) individual task card
+  |   +-- TaskList.tsx                  # (legacy) flat task list
+  |   +-- TaskForm.tsx                  # (legacy) create/edit form modal
+  |
+  +-- store/                            # Zustand state stores
+  |   +-- taskStore.ts                  # All task data: fetch, add, edit, remove, toggle
+  |   +-- themeStore.ts                 # Theme state with localStorage persistence
+  |   +-- toastStore.ts                 # Toast queue: add, dismiss, shortcut methods
+  |   +-- uiStore.ts                    # UI state: view, sidebar, modal, filter, sort, cmd
+  |
+  +-- contexts/                         # Legacy React context files (superseded by stores)
+  |   +-- ThemeContext.tsx              # Old theme context (replaced by themeStore)
+  |   +-- ToastContext.tsx              # Old toast context (replaced by toastStore)
+  |
+  +-- hooks/
+  |   +-- useTasks.ts                   # filterAndSortTasks(), computeStats() still used
+  |                                     # (useTasks hook superseded by taskStore)
+  |
+  +-- lib/
+  |   +-- taskStorage.ts                # Server-side JSON CRUD with write queue + backup
+  |
+  +-- types/
+  |   +-- index.ts                      # All TypeScript interfaces, enums, and constants
+  |
+  +-- utils/
+  |   +-- index.ts                      # formatMinutes, parseTimeInput, formatDateForInput, cn
+  |
+  +-- data/
+  |   +-- tasks.json                    # Live task storage (auto-created on first write)
+  |   +-- tasks.backup.json             # Auto-backup before every write operation
+  |
+  +-- public/                           # Static assets
+  +-- next.config.ts                    # Next.js configuration
+  +-- tsconfig.json                     # TypeScript config (@/* path alias)
+  +-- postcss.config.mjs                # PostCSS for Tailwind v4
+  +-- eslint.config.mjs                 # ESLint configuration
+  +-- package.json                      # Dependencies and scripts
+  +-- PROJECT_OVERVIEW.txt              # This file
 
 
---------------------------------------------------------------------------------
-  FILTERING & SORTING
---------------------------------------------------------------------------------
+================================================================================
+  4. ARCHITECTURE OVERVIEW
+================================================================================
 
-  Filters available:
-    - Full-text search (title, description, tags)
-    - Priority: All | Critical | High | Medium | Low
-    - Status:   All | Pending | In Progress | Completed
-    - Due Date: All | Overdue | Due Today | Due This Week | No Due Date
+  Browser (Client Side)
+  -----------------------------------------------------------------------
+  app/page.tsx  (orchestrator — 'use client')
+    |
+    +-- reads from: useTaskStore  (tasks, loading, CRUD functions)
+    +-- reads from: useUIStore    (view, sidebar, modal, filter, sort)
+    +-- reads from: useToastStore (success / error / info / warning)
+    |
+    +-- <TopBar>         view switcher, Cmd+K trigger, New Task button
+    +-- <Sidebar>        nav, priority/tag filters, stats footer
+    +-- <KanbanBoard>    DnD columns          [when view = 'kanban']
+    +-- <ListView>       table rows           [when view = 'list']
+    +-- <CalendarView>   month grid           [when view = 'calendar']
+    +-- <TaskModal>      create / edit        [when isCreating or selectedTask]
+    +-- <CommandPalette> search overlay       [when cmdOpen = true]
 
-  Sort fields:
-    - Priority (default)
-    - Due Date
-    - Created Date
-    - Time Estimate
-    - Title (alphabetical)
+  Zustand Stores (singletons — no Provider needed):
+    taskStore  ->  store/taskStore.ts
+    uiStore    ->  store/uiStore.ts
+    themeStore ->  store/themeStore.ts  (persisted to localStorage)
+    toastStore ->  store/toastStore.ts
 
-  Sort direction: Ascending or Descending (toggle button)
+  Layout-level (app/layout.tsx):
+    <ThemeSync />       applies .dark class to <html>
+    <ToastContainer />  renders toast stack bottom-right
+  -----------------------------------------------------------------------
+           | fetch / POST / PUT / PATCH / DELETE
+           v
+  Next.js API Routes (Server Side)
+  -----------------------------------------------------------------------
+   GET  /api/tasks        ->  readTasks()
+   POST /api/tasks        ->  createTask(body)
+   GET  /api/tasks/:id    ->  getTaskById(id)
+   PUT  /api/tasks/:id    ->  updateTask(id, body)
+   PATCH /api/tasks/:id   ->  toggleTaskStatus(id)
+   DELETE /api/tasks/:id  ->  deleteTask(id)
+  -----------------------------------------------------------------------
+           | read / write JSON
+           v
+  lib/taskStorage.ts
+  -----------------------------------------------------------------------
+    - Write queue (mutex lock — one write at a time)
+    - Backup before every write -> tasks.backup.json
+    - Falls back to backup if tasks.json is corrupted
+    - Validates all required fields before writing
+  -----------------------------------------------------------------------
+           |
+           v
+  data/tasks.json   +   data/tasks.backup.json
+  -----------------------------------------------------------------------
 
-  Quick filter buttons in sidebar:
-    - All Tasks
-    - 🔴 Critical
-    - 🟠 High Priority
-    - ⏳ In Progress
-    - ✅ Completed
+
+================================================================================
+  5. STATE MANAGEMENT (ZUSTAND STORES)
+================================================================================
+
+  The app uses four Zustand stores instead of React Context.
+  Zustand stores are module-level singletons — no Provider wrapper needed.
+
+  -- taskStore.ts ----------------------------------------------------------
+
+    State:
+      tasks    : Task[]      all tasks loaded from the server
+      loading  : boolean     true while fetchTasks() is in flight
+      error    : string | null
+
+    Actions:
+      fetchTasks()            GET /api/tasks,       populates tasks[]
+      addTask(data)           POST /api/tasks,       appends to tasks[]
+      editTask(id, data)      PUT /api/tasks/:id,    updates in tasks[]
+      removeTask(id)          DELETE /api/tasks/:id, removes from tasks[]
+      toggleStatus(id)        PATCH /api/tasks/:id,  flips status
+
+  -- uiStore.ts ------------------------------------------------------------
+
+    State:
+      view           'kanban' | 'list' | 'calendar'   (default: kanban)
+      sidebarOpen    boolean                           (default: true)
+      selectedTask   Task | null    task open in modal
+      isCreating     boolean        modal in create mode vs edit mode
+      defaultStatus  Status         pre-filled status for new tasks
+      cmdOpen        boolean        command palette visible
+      filter         FilterState    active filters
+      sort           SortState      active sort field + direction
+
+    Actions:
+      setView(v)              switch between kanban/list/calendar
+      toggleSidebar()         collapse or expand sidebar
+      openNew(status?)        open modal in create mode
+      openEdit(task)          open modal in edit mode with task data
+      closeModal()            close the task modal
+      openCmd() / closeCmd()  show / hide command palette
+      setFilter(partial)      merge partial FilterState update
+      resetFilter()           revert filters to all defaults
+      setSort(s)              change sort field or direction
+
+  -- themeStore.ts ---------------------------------------------------------
+
+    State:
+      theme   'light' | 'dark'
+      isDark  boolean   (matches theme === 'dark')
+
+    Actions:
+      toggleTheme()   flip between light and dark
+      setTheme(t)     explicitly set theme
+
+    Persistence:
+      Uses zustand/middleware persist — writes to localStorage key 'todo-theme'
+      On rehydration, syncs isDark and applies document.documentElement class
+
+  -- toastStore.ts ---------------------------------------------------------
+
+    State:
+      toasts : Toast[]   active notifications
+
+    Toast interface:
+      id       string
+      type     'success' | 'error' | 'info' | 'warning'
+      title    string
+      message  string?   optional detail line
+      duration number?   auto-dismiss ms (default: 4000; error: 6000)
+
+    Actions:
+      addToast(opts)   generic toast; auto-dismisses after duration ms
+      dismiss(id)      manually remove a toast
+      success(title)   green toast,  4 s
+      error(title)     red toast,    6 s
+      info(title)      blue toast,   4 s
+      warning(title)   amber toast,  4 s
 
 
---------------------------------------------------------------------------------
-  DATA PERSISTENCE
---------------------------------------------------------------------------------
+================================================================================
+  6. DATA LAYER — JSON FILE STORAGE
+================================================================================
 
-  - Tasks are stored in data/tasks.json as a JSON array
-  - All writes go through a write queue to prevent race conditions
-  - Before each write, the current file is copied to data/tasks.backup.json
-  - If tasks.json is corrupted on read, the app falls back to the backup
-  - No external database is needed — entirely file-based
+  File: lib/taskStorage.ts  (server-side, runs inside API routes only)
+
+  Storage files:
+    data/tasks.json          primary storage
+    data/tasks.backup.json   auto-backup before every write
+
+  Write Queue:
+    A simple mutex (writeLock boolean + pending array) ensures that even if
+    multiple API requests arrive simultaneously, writes happen one at a time.
+    This prevents partial writes and data corruption.
+
+  Read flow:
+    1. Parse data/tasks.json
+    2. If parse fails, read data/tasks.backup.json instead
+    3. Return Task[] array
+
+  Write flow:
+    1. Acquire write lock (enqueue if lock is held)
+    2. Copy current tasks.json content to tasks.backup.json
+    3. Write new content to tasks.json (JSON.stringify with 2-space indent)
+    4. Release lock, run next queued write if any
+
+  Validation (runs on every create and update):
+    - title must be a non-empty string, max 200 characters
+    - priority must be one of: critical / high / medium / low
+    - status must be one of: pending / in-progress / completed
+    - timeEstimate must be a non-negative number
+    - dueDate, if provided, must parse as a valid Date
+    - tags, if provided, must be an array of strings
+
+  Available functions:
+    readTasks()              returns Task[]
+    writeTasks(tasks)        queued write to JSON file
+    createTask(data)         validates + adds id, timestamps, writes
+    updateTask(id, data)     merges partial data, updates updatedAt, writes
+    deleteTask(id)           removes by id, writes
+    toggleTaskStatus(id)     cycles: pending -> in-progress -> completed
+    getTaskById(id)          returns single Task or null
 
 
---------------------------------------------------------------------------------
-  HOW TO RUN
---------------------------------------------------------------------------------
+================================================================================
+  7. REST API ROUTES
+================================================================================
+
+  GET  /api/tasks
+    Response: { tasks: Task[] }
+
+  POST /api/tasks
+    Body:     TaskFormData (title, priority, status, timeEstimate, etc.)
+    Response: { task: Task }   HTTP 201 on success
+    Error:    { error: string } HTTP 400 on validation failure
+
+  GET  /api/tasks/:id
+    Response: { task: Task }   HTTP 404 if not found
+
+  PUT  /api/tasks/:id
+    Body:     Partial<TaskFormData>
+    Response: { task: Task }  (full updated task)
+    Error:    { error: string }
+
+  PATCH /api/tasks/:id
+    No body required — toggles task status
+    Response: { task: Task }
+
+  DELETE /api/tasks/:id
+    Response: { success: true }
+    Error:    { error: string } HTTP 404 if not found
+
+  All error responses include { error: string } with an appropriate HTTP status.
+  All client calls go through taskStore.ts which uses a shared apiFetch<T>()
+  helper that throws an Error on any non-2xx response.
+
+
+================================================================================
+  8. TYPESCRIPT TYPES & CONSTANTS
+================================================================================
+
+  File: types/index.ts
+
+  Primitive types:
+    Priority   = 'low' | 'medium' | 'high' | 'critical'
+    Status     = 'pending' | 'in-progress' | 'completed'
+    SortField  = 'priority' | 'dueDate' | 'createdAt' | 'timeEstimate' | 'title'
+    ViewType   = 'kanban' | 'list' | 'calendar'
+
+  Task interface fields:
+    id           string    UUID v4, auto-generated
+    title        string    Required, max 200 chars
+    description  string?   Optional
+    priority     Priority
+    status       Status
+    timeEstimate number    Minutes (0 = no estimate)
+    dueDate      string?   ISO 8601
+    createdAt    string    ISO 8601 (set on create)
+    updatedAt    string    ISO 8601 (set on every save)
+    completedAt  string?   ISO 8601 (set when status becomes 'completed')
+    tags         string[]? Optional tag labels
+    actualTime   number?   Optional actual time spent (minutes)
+
+  TaskFormData:
+    Same shape as Task but excludes auto-managed fields:
+    id, createdAt, updatedAt, completedAt
+
+  FilterState:
+    priority      : Priority | 'all'
+    status        : Status | 'all'
+    search        : string
+    dueDateFilter : 'all' | 'overdue' | 'today' | 'this-week' | 'no-date'
+
+  SortState:
+    field     : SortField
+    direction : 'asc' | 'desc'
+
+  TaskStats:
+    total, pending, inProgress, completed, overdue,
+    criticalCount, highCount, mediumCount, lowCount,
+    totalEstimatedTime, completedTime
+
+  PRIORITY_CONFIG[priority]:
+    label, emoji, color (Tailwind text class), bgColor, borderColor,
+    darkColor, darkBgColor
+
+  STATUS_CONFIG[status]:
+    label, color, bgColor, darkColor, darkBgColor
+
+  PRIORITY_ORDER:
+    critical: 0 | high: 1 | medium: 2 | low: 3
+    (lower number = higher priority — used for sort comparisons)
+
+
+================================================================================
+  9. UI COMPONENT REFERENCE
+================================================================================
+
+  -- TopBar.tsx -------------------------------------------------------------
+
+    Props:
+      view            ViewType
+      onViewChange    (v: ViewType) => void
+      sidebarOpen     boolean
+      onSidebarToggle () => void
+      onNewTask       () => void
+      onCommandPalette () => void
+
+    Features:
+      - App logo / title on the left
+      - Sidebar toggle button (hamburger icon)
+      - View switcher: Kanban | List | Calendar (icon + label, pill highlight)
+      - "New Task" primary action button
+      - Cmd+K button to open command palette
+      - ThemeToggle (light/dark switch) on far right
+
+  -- Sidebar.tsx ------------------------------------------------------------
+
+    Props:
+      open           boolean
+      filter         FilterState       current active filters
+      onFilterChange (partial) => void  merged into uiStore
+      stats          TaskStats
+      allTags        string[]
+      onNewTask      () => void
+
+    Features:
+      - Collapses to 0 width when open=false (CSS transition, not unmount)
+      - "All Tasks" nav item: clears status filter
+      - Status nav items: Pending / In Progress / Completed
+      - Priority nav items: Critical / High / Medium / Low
+      - Each nav item shows task count badge from stats
+      - Tag list: clickable tag pills from allTags array
+      - Search box: updates filter.search on every keystroke
+      - Stats summary footer (total / completed / overdue)
+      - "New Task" shortcut button at bottom
+
+  -- KanbanBoard.tsx --------------------------------------------------------
+
+    Props:
+      tasks          Task[]
+      onTaskClick    (task: Task) => void
+      onStatusChange (id, status) => void
+      onNewTask      (status: Status) => void
+
+    Features:
+      - 3 columns: Pending | In Progress | Completed
+      - Each column is a DnD droppable area (@dnd-kit/core useDroppable)
+      - Task cards are DnD sortable (@dnd-kit/sortable useSortable)
+      - DragOverlay renders a floating ghost card while dragging
+      - Dropping a card into a different column calls onStatusChange
+      - Column headers show task count per status
+      - "Add Task" button at bottom of each column
+      - Priority color band on left edge of each card
+      - Tag chips rendered on cards (first 2 + count overflow)
+      - Due date chip: red if overdue, amber if due today
+
+  -- ListView.tsx -----------------------------------------------------------
+
+    Props:
+      tasks           Task[]
+      loading         boolean
+      onTaskClick     (task: Task) => void
+      onStatusChange  (id, status) => void
+      onPriorityChange(id, priority) => void
+      onDelete        (id) => void
+
+    Features:
+      - Sortable column headers (click to toggle asc/desc)
+      - Sticky header row + scrollable body
+      - Priority badge inline with color
+      - Status dropdown select (inline edit, no modal needed)
+      - Priority dropdown select (inline edit)
+      - Due date: formatted with date-fns, red if overdue
+      - Time estimate: formatted as "1h 30m" or "-" if none
+      - Delete button with confirm state (click once shows confirm, click again deletes)
+      - Row click opens TaskModal for full edit
+      - Skeleton loading rows shown while loading=true
+      - Empty state illustration when no tasks match filters
+
+  -- CalendarView.tsx -------------------------------------------------------
+
+    Props:
+      tasks       Task[]
+      onTaskClick (task: Task) => void
+      onNewTask   (status: Status) => void
+
+    Features:
+      - Month grid generated with date-fns getDay / getDaysInMonth
+      - Prev / Next month navigation arrows
+      - "Today" button jumps to current month
+      - Each day cell shows task pills (colored by priority)
+      - Overflow: "N more" link for days with > 3 tasks
+      - Clicking a task pill opens TaskModal
+      - Clicking empty date cell opens create modal
+      - Today's date highlighted with accent color
+      - Days outside current month are dimmed
+
+
+================================================================================
+  10. TASK MODAL (CREATE & EDIT)
+================================================================================
+
+  File: components/TaskModal.tsx
+
+  Props:
+    task           Task | null      null = create mode
+    initialStatus  Status?          pre-fills status when creating
+    onSubmit       (data: TaskFormData) => void
+    onDelete       (id: string) => void
+    onClose        () => void
+
+  Fields in the modal:
+    Title          text input        required
+    Description    textarea          optional, auto-resize
+    Status         select            three options
+    Priority       select            four options with emoji
+    Due Date       date input        cleared with x button
+    Time Estimate  text input        parsed by parseTimeInput()
+    Tags           tag input         add with Enter or comma, remove with x
+    Actual Time    number input      optional time spent
+
+  Time parsing (parseTimeInput utility):
+    "2h"     => 120 minutes
+    "90m"    => 90 minutes
+    "1h 30m" => 90 minutes
+    "90"     => 90 minutes (plain number treated as minutes)
+    ""       => 0
+
+  Time formatting (formatMinutes utility):
+    0    => ""
+    60   => "1h"
+    90   => "1h 30m"
+    45   => "45m"
+
+  Create mode:
+    - Modal title: "New Task"
+    - All fields start at defaults (priority=medium, status=pending)
+    - initialStatus overrides default status when opened from a Kanban column
+    - Form submit calls onSubmit with TaskFormData
+    - taskStore.addTask() sends POST /api/tasks
+    - On success: toast.success("Task created"), modal closes
+
+  Edit mode:
+    - Modal title: "Edit Task"
+    - All fields pre-populated from task prop
+    - Form submit calls onSubmit with changed fields
+    - taskStore.editTask(id, data) sends PUT /api/tasks/:id
+    - On success: toast.success("Task updated"), modal closes
+    - Delete button: calls onDelete(task.id)
+    - taskStore.removeTask(id) sends DELETE /api/tasks/:id
+    - On success: toast.success("Task deleted"), modal closes
+
+  Metadata footer (edit mode only):
+    - Created: formatted with date-fns
+    - Last updated: formatted with date-fns
+    - Completed: formatted, shown only if task.completedAt is set
+
+
+================================================================================
+  11. COMMAND PALETTE
+================================================================================
+
+  File: components/CommandPalette.tsx
+
+  Props:
+    open        boolean
+    onClose     () => void
+    tasks       Task[]
+    onTaskClick (task: Task) => void
+    onNewTask   () => void
+    onViewChange(v: ViewType) => void
+
+  Keyboard shortcut: Ctrl+K / Cmd+K (global keydown listener in page.tsx)
+
+  UX:
+    - Backdrop overlay dims the rest of the app
+    - Search input auto-focuses when opened
+    - Escape key closes palette
+    - Arrow keys move the highlighted item up / down
+    - Enter key activates the highlighted item
+    - Click on any item also activates it
+
+  Result sections:
+    1. Actions (always shown, filtered by query):
+         "New Task"            -> calls onNewTask
+         "Switch to Kanban"    -> calls onViewChange('kanban')
+         "Switch to List"      -> calls onViewChange('list')
+         "Switch to Calendar"  -> calls onViewChange('calendar')
+
+    2. Tasks (query must be >= 1 char, matches title):
+         Each result row shows: priority color dot, title, status chip
+         Clicking row calls onTaskClick(task) -> opens TaskModal
+
+  Empty state:
+    "No results found" message when query returns no matches
+
+
+================================================================================
+  12. SIDEBAR & FILTERING PIPELINE
+================================================================================
+
+  Filter Flow:
+    User clicks a nav item in Sidebar
+      -> Sidebar calls onFilterChange({ status: 'in-progress' })
+         (passes Partial<FilterState>, NOT a raw string)
+      -> page.tsx passes onFilterChange={setFilter}
+         (uiStore.setFilter merges partial into current FilterState)
+      -> FilterState in uiStore is updated
+      -> page.tsx re-runs filteredTasks = filterAndSortTasks(tasks, filter, sort)
+      -> Updated task list passed to active view component
+
+  filterAndSortTasks (lib/utils.ts):
+    1. Filter by filter.status    (skip if 'all')
+    2. Filter by filter.priority  (skip if 'all')
+    3. Filter by filter.search    (case-insensitive title + description match)
+    4. Filter by filter.dueDateFilter:
+         'overdue'    : dueDate < today AND status != completed
+         'today'      : dueDate == today
+         'this-week'  : dueDate within next 7 days
+         'no-date'    : dueDate is null/undefined
+    5. Sort by sort.field with sort.direction (asc/desc):
+         priority: uses PRIORITY_ORDER map (critical=0, low=3)
+         dueDate : null dates treated as Infinity (sort to end)
+         other   : standard string/number comparison
+
+
+================================================================================
+  13. THEME SYSTEM
+================================================================================
+
+  Strategy: class-based dark mode on the root <html> element.
+  Tailwind config sets darkMode: 'class'.
+  Tailwind's @custom-variant dark expression:
+    @custom-variant dark (&:where(.dark, .dark *))
+
+  ThemeSync component (app/layout.tsx sibling):
+    - Reads themeStore.theme on every render
+    - document.documentElement.classList.toggle('dark', isDark)
+    - On first mount, reads prefers-color-scheme if localStorage is empty
+      and calls setTheme() to seed the store
+
+  ThemeStore (persisted):
+    - Saved to localStorage key 'todo-theme'
+    - Only { theme } is persisted (isDark is derived)
+    - On page reload, zustand rehydrates from localStorage before first render,
+      ThemeSync then applies the class immediately — no FOUC
+
+  ThemeToggle component:
+    - Sun / Moon icon button in TopBar
+    - Calls themeStore.toggleTheme() on click
+
+
+================================================================================
+  14. TOAST NOTIFICATION SYSTEM
+================================================================================
+
+  Architecture:
+    toastStore (Zustand) -> ToastContainer (UI)
+
+  ToastContainer (app/layout.tsx sibling):
+    - Fixed position: bottom-right, z-index: 9999
+    - Renders a vertical stack of Toast cards
+    - Uses framer-motion AnimatePresence for enter/exit animation
+    - Each toast: slide-in from right, fade-out on dismiss
+
+  Toast types and colors:
+    success   green border + icon
+    error     red border + icon
+    info      blue border + icon
+    warning   amber border + icon
+
+  Dismiss:
+    - Auto-dismiss: setTimeout calls toastStore.dismiss(id) after duration ms
+    - Manual: x button on each toast
+
+  Usage in page.tsx:
+    const { success, error } = useToastStore()
+    ...
+    success('Task created')
+    error('Failed to save task')
+
+
+================================================================================
+  15. DESIGN TOKEN SYSTEM (CSS CUSTOM PROPERTIES)
+================================================================================
+
+  File: app/globals.css
+
+  Light mode tokens (:root):
+    --bg-base          page background         (white / very light gray)
+    --bg-surface       cards and sidebars
+    --bg-elevated      modals and overlays
+    --bg-hover         hover highlight
+    --text-primary     default text
+    --text-secondary   subdued text
+    --text-muted       placeholder / hint text
+    --border-default   dividers and borders
+    --accent           primary action color     (blue)
+    --accent-hover     darker accent on hover
+    --shadow-sm        subtle box shadow
+    --shadow-md        medium box shadow
+    --shadow-lg        large modal shadow
+    --sidebar-bg       sidebar background
+    --sidebar-border   sidebar right border
+
+  Dark mode tokens (.dark overrides):
+    Same property names, different values.
+    Dark surfaces use near-black backgrounds.
+    Accent remains the same blue.
+    Text switches to near-white / gray.
+
+  Usage:
+    All components use Tailwind utility classes that reference these tokens via
+    CSS variables. Example:
+      bg-[var(--bg-surface)]
+      text-[var(--text-primary)]
+      border-[var(--border-default)]
+    This means no component has hardcoded colors — swapping the theme changes
+    everything by updating the CSS variable values in the :root.
+
+
+================================================================================
+  16. COMPLETE DATA FLOW WALKTHROUGHS
+================================================================================
+
+  16a. CREATING A NEW TASK (from TopBar button)
+  -----------------------------------------------
+  1.  User clicks "New Task" in TopBar
+  2.  TopBar calls props.onNewTask()
+  3.  page.tsx calls uiStore.openNew()            isCreating=true, selectedTask=null
+  4.  TaskModal renders with task=null
+  5.  User fills out Title, Priority, Due Date etc.
+  6.  User clicks "Create Task"
+  7.  TaskModal calls props.onSubmit(formData)
+  8.  page.tsx calls taskStore.addTask(formData)
+  9.  addTask POSTs to /api/tasks
+  10. API route calls lib/taskStorage.createTask()
+  11. taskStorage validates fields, generates UUID, timestamps
+  12. Write queue lock acquired -> backup written -> tasks.json written
+  13. API responds { task: Task } HTTP 201
+  14. addTask appends new Task to store.tasks[]
+  15. page.tsx calls toastStore.success('Task created')
+  16. uiStore.closeModal()                         isCreating=false
+  17. ToastContainer renders green toast
+  18. All view components receive updated tasks[] via filteredTasks memo
+
+  16b. EDITING AN EXISTING TASK
+  -----------------------------------------------
+  1.  User clicks a task card in Kanban, row in List, or pill in Calendar
+  2.  View component calls props.onTaskClick(task)
+  3.  page.tsx calls uiStore.openEdit(task)        selectedTask=task, isCreating=false
+  4.  TaskModal renders with task=task (pre-populated)
+  5.  User modifies fields and clicks "Save Changes"
+  6.  TaskModal calls props.onSubmit(formData)
+  7.  page.tsx calls taskStore.editTask(task.id, formData)
+  8.  editTask PUTs to /api/tasks/:id
+  9.  API calls lib/taskStorage.updateTask(id, data)
+  10. taskStorage merges changes, updates updatedAt, writes JSON
+  11. API responds { task: Task }
+  12. editTask replaces task in store.tasks[]
+  13. toastStore.success('Task updated')
+  14. uiStore.closeModal()
+
+  16c. DRAG AND DROP STATUS CHANGE (Kanban)
+  -----------------------------------------------
+  1.  User grabs a task card (mousedown / touchstart)
+  2.  @dnd-kit DndContext fires onDragStart
+  3.  DragOverlay renders a copy of the card at cursor position
+  4.  Original card slot shows dimmed placeholder
+  5.  User moves cursor to a different column
+  6.  Column's useDroppable setNodeRef detects the drag-over
+  7.  User releases the card (mouseup / touchend)
+  8.  DndContext fires onDragEnd with { active, over }
+  9.  if active.data.current.status !== over.id:
+        KanbanBoard calls props.onStatusChange(taskId, newStatus)
+  10. page.tsx calls taskStore.editTask(id, { status: newStatus })
+      (or toggleStatus if cycling between states)
+  11. API write, store update, cache refresh (same as edit flow above)
+  12. Kanban columns re-render with new task distribution
+
+  16d. FILTERING TASKS
+  -----------------------------------------------
+  1.  User clicks "High Priority" in Sidebar
+  2.  Sidebar calls props.onFilterChange({ priority: 'high' })
+  3.  page.tsx's setFilter (from uiStore) merges: filter.priority = 'high'
+  4.  uiStore.filter is now { ...prev, priority: 'high' }
+  5.  filteredTasks memo in page.tsx re-evaluates:
+        filterAndSortTasks(tasks, filter, sort)
+  6.  Returns only high priority tasks
+  7.  Active view component receives updated filteredTasks[]
+  8.  Sidebar nav item for "High" shows active state (checked against filter)
+
+  16e. COMMAND PALETTE SEARCH
+  -----------------------------------------------
+  1.  User presses Ctrl+K (global keydown in page.tsx)
+  2.  uiStore.openCmd()                            cmdOpen=true
+  3.  CommandPalette renders with autofocus on search input
+  4.  User types "deploy"
+  5.  CommandPalette filters tasks where title.toLowerCase().includes('deploy')
+  6.  Also shows action items that match the query
+  7.  User presses ArrowDown to move highlight
+  8.  User presses Enter
+  9.  If over a task: calls props.onTaskClick(task) -> opens TaskModal
+  10. CommandPalette closes
+  11. Escape at any time: uiStore.closeCmd()
+
+
+================================================================================
+  17. KEY USER FLOWS
+================================================================================
+
+  FLOW 1: Complete a task from Kanban
+  1. Open app -> KanbanBoard visible
+  2. Drag task card from "Pending" column to "Completed" column
+  3. Task disappears from Pending, appears in Completed
+  4. Stats in Sidebar update (completed count +1)
+
+  FLOW 2: Create task for a specific column
+  1. Click "Add Task" button at bottom of "In Progress" column
+  2. TaskModal opens with Status pre-set to "in-progress"
+  3. Fill in title, set priority, save
+  4. New task card appears in "In Progress" column immediately
+
+  FLOW 3: Filter by due date (overdue tasks)
+  1. Click "Overdue" filter option in Sidebar
+  2. All views show only tasks where dueDate < today AND status != completed
+  3. Active filter chip visible in Sidebar
+  4. To clear: click "All Tasks" or the x on the active filter
+
+  FLOW 4: Switch views
+  1. Click "List" in TopBar view switcher
+  2. ListView renders with all filteredTasks
+  3. Inline edit a priority directly in the row dropdown
+  4. Switch to "Calendar" to see due dates plotted on the month grid
+  5. Click task pill in calendar to open TaskModal
+
+  FLOW 5: Quick search via Command Palette
+  1. Press Ctrl+K (Cmd+K on Mac)
+  2. Type partial task name or action
+  3. Use ArrowUp/Down to navigate results
+  4. Press Enter to open the task or execute the action
+
+  FLOW 6: Dark mode toggle
+  1. Click sun/moon icon in TopBar
+  2. themeStore.toggleTheme() runs
+  3. ThemeSync applies/removes .dark class on <html>
+  4. All CSS custom properties switch to dark values instantly
+  5. Preference persisted to localStorage — survives page reload
+
+
+================================================================================
+  18. HOW TO RUN & BUILD
+================================================================================
+
+  Requirements:
+    Node.js >= 18
+    npm >= 9
 
   Install dependencies:
     npm install
 
-  Start development server:
+  Development server (with hot reload):
     npm run dev
-    → Opens at http://localhost:3000
+    -> App runs at http://localhost:3000
 
-  Build for production:
+  Production build:
     npm run build
+    -> Compiles TypeScript, bundles JS/CSS
 
-  Start production server:
+  Start production server (after build):
     npm start
+    -> App runs at http://localhost:3000
+
+  TypeScript type check (no emit):
+    npx tsc --noEmit
+
+  Lint:
+    npm run lint
+
+  No environment variables are required.
+  The app runs fully offline — all data stored in data/tasks.json.
+
+  First run:
+    If data/tasks.json does not exist, the app creates it automatically
+    with an empty tasks array on the first API request.
 
 
---------------------------------------------------------------------------------
-  DEPENDENCIES
---------------------------------------------------------------------------------
+================================================================================
+  19. CONFIGURATION FILES
+================================================================================
 
-  Runtime:
-    next          16.1.6   — Framework
-    react         19.2.3   — UI library
-    react-dom     19.2.3   — DOM renderer
-    uuid          13.x     — UUID generation for task IDs
-    date-fns      4.x      — Date formatting and comparison utilities
+  package.json
+    "name": "to-do-list"
+    "version": "0.1.0"
+    Scripts: dev, build, start, lint
+    Key dependencies (and versions as of last update):
+      next            16.1.6
+      react / react-dom  19.x
+      typescript      5.x
+      tailwindcss     4.x
+      zustand         5.0.11
+      @dnd-kit/core   6.x
+      @dnd-kit/sortable  8.x
+      @dnd-kit/utilities  3.x
+      framer-motion   11.x
+      date-fns        4.x
+      uuid            10.x
+      lucide-react    0.x
 
-  Development:
-    typescript            — Type safety
-    tailwindcss           — Utility-first CSS framework (v4)
-    @tailwindcss/postcss  — PostCSS integration for Tailwind v4
-    eslint                — Code linting
-    @types/uuid           — TypeScript types for uuid
+  tsconfig.json
+    target: ES2017
+    lib: ["dom", "dom.iterable", "esnext"]
+    strict: true
+    moduleResolution: bundler
+    paths: { "@/*": ["./*"] }
+    includes: . (full project)
+    excludes: node_modules
 
+  next.config.ts
+    (default Next.js config — no custom webpack or redirects)
+
+  tailwind.config   (none — Tailwind v4 is configured via CSS)
+    In globals.css:
+      @import "tailwindcss";
+      @custom-variant dark (&:where(.dark, .dark *));
+
+  .gitignore
+    node_modules/, .next/, data/*.json (optional — tasks are local state)
+
+  No .env file required.
+  No external database or API keys needed.
+
+
+================================================================================
+  20. KNOWN LIMITATIONS & EXTENSION POINTS
+================================================================================
+
+  Current limitations:
+    - Single-user: no auth, no multi-user support
+    - File-based storage: not suitable for production deployments with
+      multiple server instances (use a database instead)
+    - No real-time sync between browser tabs
+    - No offline PWA support
+    - Tags are free-form strings — no tag management UI
+
+  Easy extension points:
+    - Replace taskStorage.ts with a database adapter (Prisma, Drizzle, etc.)
+      without changing any API routes or store code
+    - Add NextAuth.js for authentication (wrap API routes)
+    - Add a tag management page (tags are already stored per-task)
+    - Add @dnd-kit/sortable reordering within a Kanban column
+    - Add task dependencies / subtasks by adding a parentId field to Task
+    - Add recurring tasks by adding recurrence rules to Task
+    - Add export to CSV/JSON by adding a GET /api/tasks/export route
+    - Add email notifications via Resend or Nodemailer on due-date approach
+
+
+================================================================================
+  END OF PROJECT OVERVIEW
 ================================================================================

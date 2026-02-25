@@ -2,6 +2,7 @@ export type Priority = 'low' | 'medium' | 'high' | 'critical';
 export type Status = 'pending' | 'in-progress' | 'completed';
 export type SortField = 'priority' | 'dueDate' | 'createdAt' | 'timeEstimate' | 'title';
 export type SortDirection = 'asc' | 'desc';
+export type ViewType = 'kanban' | 'list' | 'calendar';
 
 export interface Task {
   id: string;
