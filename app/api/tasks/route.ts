@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readTasks, createTask } from '@/lib/taskStorage';
 import { TaskFormData } from '@/types';
+import '@/lib/mongodb'; // establish MongoDB connection on first API call
 
 export async function GET() {
   try {

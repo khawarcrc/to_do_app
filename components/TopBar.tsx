@@ -2,6 +2,7 @@
 
 import { ViewType } from '@/types';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useAuthStore } from '@/store/authStore';
 
 interface Props {
   view: ViewType;
@@ -46,6 +47,7 @@ const VIEWS: { id: ViewType; label: string; icon: React.ReactNode }[] = [
 ];
 
 export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette, onSidebarToggle, sidebarOpen }: Props) {
+  const { user, logout } = useAuthStore();
   return (
     <header
       className="flex items-center gap-3 px-4 h-14 border-b shrink-0 z-30"
@@ -137,6 +139,35 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
       </button>
 
       <ThemeToggle />
+
+      {/* User + Logout */}
+      {user && (
+        <div className="flex items-center gap-2 pl-1 border-l" style={{ borderColor: 'var(--border-default)' }}>
+          <div
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+              style={{ background: 'var(--accent)' }}
+            >
+              {user.email[0].toUpperCase()}
+            </div>
+            <span className="max-w-[120px] truncate">{user.email}</span>
+          </div>
+          <button
+            onClick={() => logout()}
+            title="Sign out"
+            className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+      )}
     </header>
   );
 }
