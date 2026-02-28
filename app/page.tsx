@@ -5,6 +5,7 @@ import { Task, TaskFormData, Status } from '@/types';
 import { useTaskStore } from '@/store/taskStore';
 import { useToastStore } from '@/store/toastStore';
 import { useUIStore } from '@/store/uiStore';
+import { useAuthStore } from '@/store/authStore';
 import { filterAndSortTasks, computeStats } from '@/hooks/useTasks';
 import TopBar from '@/components/TopBar';
 import Sidebar from '@/components/Sidebar';
@@ -33,10 +34,23 @@ export default function Home() {
     sort,
   } = useUIStore();
 
+  const { setUser, setInitialising } = useAuthStore();
+
   /* ── Bootstrap ──────────────────────────────────────────── */
   useEffect(() => {
     void fetchTasks();
   }, [fetchTasks]);
+
+  /* ── Auth init ───────────────────────────────────────────── */
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.email) setUser({ email: data.email });
+      })
+      .finally(() => setInitialising(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Derived data ───────────────────────────────────────── */
   const filteredTasks = useMemo(
