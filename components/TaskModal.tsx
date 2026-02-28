@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Task, TaskFormData, Priority, Status, PRIORITY_CONFIG, STATUS_CONFIG } from '@/types';
+import { Task, TaskFormData, SubTask, Priority, Status, PRIORITY_CONFIG, STATUS_CONFIG } from '@/types';
 import { parseTimeInput, formatMinutes, formatDateForInput, cn } from '@/utils';
 import { format, parseISO, isValid } from 'date-fns';
 
@@ -112,6 +112,9 @@ export default function TaskModal({ task, initialStatus, onSubmit, onDelete, onC
   const [submitting, setSubmitting] = useState(false);
   const [titleError, setTitleError] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [subTasks, setSubTasks] = useState<SubTask[]>([]);
+  const [subInput, setSubInput] = useState('');
+  const [descFocused, setDescFocused] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -126,9 +129,11 @@ export default function TaskModal({ task, initialStatus, onSubmit, onDelete, onC
         tags: task.tags ?? [],
       });
       setTimeInput(task.timeEstimate > 0 ? formatMinutes(task.timeEstimate) : '');
+      setSubTasks(task.subTasks ?? []);
     } else {
       setForm({ ...DEFAULT, status: initialStatus ?? DEFAULT.status });
       setTimeInput('');
+      setSubTasks([]);
     }
     setTimeout(() => titleRef.current?.focus(), 80);
   }, [task, initialStatus]);
@@ -152,6 +157,22 @@ export default function TaskModal({ task, initialStatus, onSubmit, onDelete, onC
     }
   }
 
+  function addSubTask() {
+    const title = subInput.trim();
+    if (!title) return;
+    const newSub: SubTask = { id: crypto.randomUUID(), title, completed: false };
+    setSubTasks((p) => [...p, newSub]);
+    setSubInput('');
+  }
+
+  function toggleSubTask(id: string) {
+    setSubTasks((p) => p.map((s) => s.id === id ? { ...s, completed: !s.completed } : s));
+  }
+
+  function removeSubTask(id: string) {
+    setSubTasks((p) => p.filter((s) => s.id !== id));
+  }
+
   async function handleSubmit() {
     if (!form.title.trim()) { setTitleError('Title is required'); return; }
     setSubmitting(true);
@@ -161,6 +182,7 @@ export default function TaskModal({ task, initialStatus, onSubmit, onDelete, onC
         title: form.title.trim(),
         dueDate: form.dueDate || undefined,
         description: form.description || undefined,
+        subTasks,
       });
       onClose();
     } catch {
@@ -276,11 +298,87 @@ export default function TaskModal({ task, initialStatus, onSubmit, onDelete, onC
             <textarea
               value={form.description ?? ''}
               onChange={(e) => set('description', e.target.value)}
+              onFocus={() => setDescFocused(true)}
+              onBlur={() => setDescFocused(false)}
               placeholder="Add a description..."
-              rows={3}
-              className="w-full mt-3 text-sm bg-transparent outline-none resize-none
+              rows={descFocused || (form.description?.length ?? 0) > 0 ? 6 : 2}
+              className="w-full mt-3 text-sm bg-transparent outline-none resize-none transition-all duration-150
                 text-[var(--text-secondary)] placeholder:text-[var(--text-muted)]"
             />
+
+            {/* Sub-tasks */}
+            <div className="mt-3 mb-1">
+              <div className="flex items-center gap-2 mb-2">
+                <svg className="w-3.5 h-3.5 text-[var(--text-muted)] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  Sub-tasks{subTasks.length > 0 && ` (${subTasks.filter((s) => s.completed).length}/${subTasks.length})`}
+                </span>
+              </div>
+
+              {subTasks.length > 0 && (
+                <ul className="space-y-1.5 mb-2">
+                  {subTasks.map((sub) => (
+                    <li key={sub.id} className="flex items-center gap-2 group/sub">
+                      <button
+                        type="button"
+                        onClick={() => toggleSubTask(sub.id)}
+                        className={cn(
+                          'w-4 h-4 rounded shrink-0 border flex items-center justify-center transition-colors',
+                          sub.completed
+                            ? 'bg-[var(--accent)] border-[var(--accent)]'
+                            : 'border-[var(--border-default)] hover:border-[var(--accent)]'
+                        )}
+                      >
+                        {sub.completed && (
+                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </button>
+                      <span className={cn(
+                        'flex-1 text-sm leading-snug',
+                        sub.completed
+                          ? 'line-through text-[var(--text-muted)]'
+                          : 'text-[var(--text-secondary)]'
+                      )}>
+                        {sub.title}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeSubTask(sub.id)}
+                        className="opacity-0 group-hover/sub:opacity-100 text-[var(--text-muted)] hover:text-red-500 transition-all text-sm leading-none px-1"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded border shrink-0" style={{ borderColor: 'var(--border-default)' }} />
+                <input
+                  type="text"
+                  value={subInput}
+                  onChange={(e) => setSubInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addSubTask(); } }}
+                  placeholder="Add a sub-task..."
+                  className="flex-1 text-sm bg-transparent outline-none text-[var(--text-secondary)] placeholder:text-[var(--text-muted)]"
+                />
+                {subInput.trim() && (
+                  <button
+                    type="button"
+                    onClick={addSubTask}
+                    className="text-xs px-2 py-0.5 rounded text-white shrink-0 transition-colors"
+                    style={{ backgroundColor: 'var(--accent)' }}
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Properties */}

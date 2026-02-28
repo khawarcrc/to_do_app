@@ -124,6 +124,7 @@ export async function createTask(data: TaskFormData): Promise<Task> {
     timeEstimate: data.timeEstimate,
     dueDate: data.dueDate,
     tags: data.tags,
+    subTasks: data.subTasks,
     createdAt: now,
     updatedAt: now,
   };
@@ -146,6 +147,7 @@ export async function updateTask(id: string, data: Partial<TaskFormData>): Promi
     timeEstimate: data.timeEstimate ?? existing.timeEstimate,
     dueDate: data.dueDate !== undefined ? data.dueDate : existing.dueDate,
     tags: data.tags !== undefined ? data.tags : existing.tags,
+    subTasks: data.subTasks !== undefined ? data.subTasks : existing.subTasks,
   };
   validateTask(merged);
 
