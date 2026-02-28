@@ -46,7 +46,7 @@ export default function Home() {
     fetch('/api/auth/me')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.email) setUser({ email: data.email });
+        if (data?.email) setUser({ email: data.email, sid: data.sid ?? '', createdAt: data.createdAt });
       })
       .finally(() => setInitialising(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps

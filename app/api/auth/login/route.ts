@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { comparePassword, signToken } from '@/lib/auth';
 import { findUserByEmail } from '@/lib/userModel';
+import { createSession, generateSid } from '@/lib/sessionModel';
 
 const COOKIE_OPTS = {
   httpOnly: true,
@@ -28,7 +29,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = await signToken({ email: user.email });
+    const sid = generateSid();
+    const ua = req.headers.get('user-agent') ?? '';
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? req.headers.get('x-real-ip') ?? 'Unknown';
+    await createSession(sid, user.email, ua, ip);
+
+    const token = await signToken({ email: user.email, sid });
     const res = NextResponse.json({ success: true, email: user.email });
     res.cookies.set('auth-token', token, COOKIE_OPTS);
     return res;

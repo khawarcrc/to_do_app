@@ -3,6 +3,7 @@
 import { ViewType } from '@/types';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuthStore } from '@/store/authStore';
+import Link from 'next/link';
 
 interface Props {
   view: ViewType;
@@ -142,9 +143,13 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
 
       {/* User + Logout */}
       {user && (
-        <div className="flex items-center gap-2 pl-1 border-l" style={{ borderColor: 'var(--border-default)' }}>
-          <div
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs"
+        <div className="flex items-center gap-1 pl-1 border-l" style={{ borderColor: 'var(--border-default)' }}>
+          {/* Avatar — links to profile */}
+          <Link
+            href="/profile"
+            title="My profile"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs
+              transition-colors hover:bg-[var(--bg-hover)]"
             style={{ color: 'var(--text-muted)' }}
           >
             <div
@@ -154,7 +159,20 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
               {user.email[0].toUpperCase()}
             </div>
             <span className="max-w-[120px] truncate">{user.email}</span>
-          </div>
+          </Link>
+          {/* Mobile — icon only */}
+          <Link
+            href="/profile"
+            title="My profile"
+            className="sm:hidden p-1.5 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </Link>
+          {/* Logout */}
           <button
             onClick={() => logout()}
             title="Sign out"

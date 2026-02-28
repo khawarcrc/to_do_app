@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hashPassword, signToken } from '@/lib/auth';
 import { findUserByEmail, createUser } from '@/lib/userModel';
+import { createSession, generateSid } from '@/lib/sessionModel';
 
 // Only Gmail addresses allowed
 const GMAIL_RE = /^[^\s@]+@gmail\.com$/i;
@@ -35,7 +36,12 @@ export async function POST(req: NextRequest) {
     const hashed = await hashPassword(password);
     await createUser(email, hashed);
 
-    const token = await signToken({ email: email.toLowerCase() });
+    const sid = generateSid();
+    const ua = req.headers.get('user-agent') ?? '';
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? req.headers.get('x-real-ip') ?? 'Unknown';
+    await createSession(sid, email.toLowerCase(), ua, ip);
+
+    const token = await signToken({ email: email.toLowerCase(), sid });
     const res = NextResponse.json({ success: true, email: email.toLowerCase() }, { status: 201 });
     res.cookies.set('auth-token', token, COOKIE_OPTS);
     return res;

@@ -21,6 +21,7 @@ export async function comparePassword(password: string, hash: string): Promise<b
 
 export interface AuthPayload extends JWTPayload {
   email: string;
+  sid: string; // session ID — used to track and revoke individual sessions
 }
 
 export async function signToken(
