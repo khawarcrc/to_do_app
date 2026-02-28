@@ -127,6 +127,26 @@ function KanbanCard({
           </div>
         )}
 
+        {/* Sub-task progress */}
+        {task.subTasks && task.subTasks.length > 0 && (
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] text-[var(--text-muted)]">
+                {task.subTasks.filter((s) => s.completed).length}/{task.subTasks.length} sub-tasks
+              </span>
+            </div>
+            <div className="h-1 rounded-full w-full" style={{ backgroundColor: 'var(--bg-hover)' }}>
+              <div
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.round((task.subTasks.filter((s) => s.completed).length / task.subTasks.length) * 100)}%`,
+                  backgroundColor: 'var(--accent)',
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
         <div className="flex items-center justify-between gap-2 mt-2">
           <PriorityBadge priority={task.priority} size="xs" />

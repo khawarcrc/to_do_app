@@ -4,6 +4,12 @@ export type SortField = 'priority' | 'dueDate' | 'createdAt' | 'timeEstimate' | 
 export type SortDirection = 'asc' | 'desc';
 export type ViewType = 'kanban' | 'list' | 'calendar';
 
+export interface SubTask {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -17,6 +23,7 @@ export interface Task {
   completedAt?: string; // ISO string
   tags?: string[];
   actualTime?: number; // in minutes
+  subTasks?: SubTask[];
 }
 
 export interface TaskFormData {
@@ -27,6 +34,7 @@ export interface TaskFormData {
   timeEstimate: number;
   dueDate?: string;
   tags?: string[];
+  subTasks?: SubTask[];
 }
 
 export interface FilterState {
