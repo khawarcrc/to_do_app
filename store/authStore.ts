@@ -2,6 +2,8 @@ import { create } from 'zustand';
 
 export interface AuthUser {
   email: string;
+  sid: string;
+  createdAt?: string;
 }
 
 interface AuthStore {
