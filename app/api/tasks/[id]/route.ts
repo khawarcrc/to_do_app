@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getTaskById, updateTask, deleteTask, toggleTaskStatus } from '@/lib/taskStorage';
+import { verifyToken } from '@/lib/auth';
+import {
+  getTaskByIdForUser,
+  updateTaskForUser,
+  deleteTaskForUser,
+  toggleTaskStatusForUser,
+} from '@/lib/taskModel';
 import { TaskFormData } from '@/types';
 
 interface Params {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(_request: NextRequest, { params }: Params) {
+async function getEmailFromRequest(req: NextRequest): Promise<string | null> {
+  try {
+    const token = req.cookies.get('auth-token')?.value;
+    if (!token) return null;
+    const payload = await verifyToken(token);
+    return payload.email;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest, { params }: Params) {
+  const email = await getEmailFromRequest(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
-    const task = getTaskById(id);
+    const task = await getTaskByIdForUser(id, email);
     if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     return NextResponse.json({ task });
   } catch (error) {
@@ -18,11 +38,14 @@ export async function GET(_request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(req: NextRequest, { params }: Params) {
+  const email = await getEmailFromRequest(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
-    const body = (await request.json()) as Partial<TaskFormData>;
-    const task = await updateTask(id, body);
+    const body = (await req.json()) as Partial<TaskFormData>;
+    const task = await updateTaskForUser(id, email, body);
     return NextResponse.json({ task });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update task';
@@ -31,10 +54,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
   }
 }
 
-export async function PATCH(_request: NextRequest, { params }: Params) {
+export async function PATCH(req: NextRequest, { params }: Params) {
+  const email = await getEmailFromRequest(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
-    const task = await toggleTaskStatus(id);
+    const task = await toggleTaskStatusForUser(id, email);
     return NextResponse.json({ task });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to toggle task';
@@ -43,10 +69,13 @@ export async function PATCH(_request: NextRequest, { params }: Params) {
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: Params) {
+export async function DELETE(req: NextRequest, { params }: Params) {
+  const email = await getEmailFromRequest(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
     const { id } = await params;
-    await deleteTask(id);
+    await deleteTaskForUser(id, email);
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete task';

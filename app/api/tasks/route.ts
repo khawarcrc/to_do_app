@@ -1,11 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readTasks, createTask } from '@/lib/taskStorage';
+import { verifyToken } from '@/lib/auth';
+import { getTasksByEmail, createTaskForUser } from '@/lib/taskModel';
 import { TaskFormData } from '@/types';
-import '@/lib/mongodb'; // establish MongoDB connection on first API call
 
-export async function GET() {
+async function getEmailFromRequest(req: NextRequest): Promise<string | null> {
   try {
-    const tasks = readTasks();
+    const token = req.cookies.get('auth-token')?.value;
+    if (!token) return null;
+    const payload = await verifyToken(token);
+    return payload.email;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const email = await getEmailFromRequest(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  try {
+    const tasks = await getTasksByEmail(email);
     return NextResponse.json({ tasks });
   } catch (error) {
     console.error('GET /api/tasks error:', error);
@@ -13,10 +27,13 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  const email = await getEmailFromRequest(req);
+  if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   try {
-    const body = (await request.json()) as TaskFormData;
-    const task = await createTask(body);
+    const body = (await req.json()) as TaskFormData;
+    const task = await createTaskForUser(email, body);
     return NextResponse.json({ task }, { status: 201 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create task';
