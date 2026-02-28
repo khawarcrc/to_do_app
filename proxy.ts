@@ -7,7 +7,9 @@ const PUBLIC_PAGES = ['/login', '/signup', '/forgot-password', '/reset-password'
 const PUBLIC_API_PREFIX = '/api/auth/';
 
 function getSecret(): Uint8Array {
-  return new TextEncoder().encode(process.env.JWT_SECRET ?? 'fallback-secret');
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET is not defined');
+  return new TextEncoder().encode(secret);
 }
 
 export async function proxy(req: NextRequest) {
