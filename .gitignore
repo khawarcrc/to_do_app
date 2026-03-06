@@ -40,6 +40,12 @@ yarn-error.log*
 #files
 *.txt
 
+# local scripts (not for git)
+/scripts/
+
+# mongodb backups
+/backups/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

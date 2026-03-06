@@ -7,7 +7,24 @@ export type ViewType = 'kanban' | 'list' | 'calendar';
 export interface SubTask {
   id: string;
   title: string;
-  completed: boolean;
+  description?: string;
+  status: Status;           // pending | in-progress | completed
+  priority: Priority;       // low | medium | high | critical
+  dueDate?: string;         // ISO string
+  assignee?: string;        // free-form name / handle
+  createdAt: string;        // ISO string
+  updatedAt: string;        // ISO string
+  /** @deprecated legacy field — use status === 'completed' instead */
+  completed?: boolean;
+}
+
+export interface SubTaskFormData {
+  title: string;
+  description?: string;
+  status: Status;
+  priority: Priority;
+  dueDate?: string;
+  assignee?: string;
 }
 
 export interface Task {
