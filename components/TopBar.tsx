@@ -4,6 +4,16 @@ import { ViewType } from '@/types';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
+
+const STATIC_PAGES = [
+  {
+    label: 'Frontend Interview Guide',
+    href: '/static/frontend-interview-guide',
+    description: '30 Q&A — React, Next.js & Web Fundamentals',
+  },
+];
+
 
 interface Props {
   view: ViewType;
@@ -49,6 +59,29 @@ const VIEWS: { id: ViewType; label: string; icon: React.ReactNode }[] = [
 
 export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette, onSidebarToggle, sidebarOpen }: Props) {
   const { user, logout } = useAuthStore();
+  const [staticOpen, setStaticOpen] = useState(false);
+  const staticRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+
+  function openDropdown() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setStaticOpen((o) => !o);
+  }
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (staticRef.current && !staticRef.current.contains(e.target as Node)) {
+        setStaticOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
+
   return (
     <header
       className="flex items-center gap-3 px-4 h-14 border-b shrink-0 z-30"
@@ -76,14 +109,18 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
       </button>
 
       {/* Logo */}
-      <div className="flex items-center gap-2 mr-2">
+      <Link
+        href="/"
+        title="Back to Home"
+        className="flex items-center gap-2 mr-2 no-underline hover:opacity-80 transition-opacity"
+      >
         <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
           <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <span className="font-semibold text-sm text-[var(--text-primary)] hidden sm:block">TodoFlow</span>
-      </div>
+      </Link>
 
       {/* View switcher */}
       <div
@@ -104,6 +141,66 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
             <span className="hidden sm:inline">{v.label}</span>
           </button>
         ))}
+      </div>
+
+      {/* Static Pages dropdown */}
+      <div ref={staticRef} className="relative">
+        <button
+          ref={btnRef}
+          onClick={openDropdown}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            staticOpen
+              ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
+              : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span className="hidden sm:inline">Static</span>
+          <svg className={`w-3 h-3 transition-transform ${staticOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {staticOpen && (
+          <div
+            className="fixed w-72 rounded-lg border z-[9999]"
+            style={{
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-default)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div
+              className="px-3 py-2"
+              style={{ borderBottom: '1px solid var(--border-default)' }}
+            >
+              <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', margin: 0 }}>
+                Static Pages
+              </p>
+            </div>
+            {STATIC_PAGES.map((page) => (
+              <Link
+                key={page.href}
+                href={page.href}
+                onClick={() => setStaticOpen(false)}
+                style={{ display: 'block', padding: '10px 12px', textDecoration: 'none' }}
+                className="hover:bg-[var(--bg-hover)]"
+              >
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                  {page.label}
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {page.description}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Spacer */}

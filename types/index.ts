@@ -149,3 +149,48 @@ export const PRIORITY_ORDER: Record<Priority, number> = {
   medium: 2,
   low: 3,
 };
+
+// ── Quotes ────────────────────────────────────────────────────────────────────
+
+export type QuoteCategory = 'daily' | 'life-lessons' | 'remember';
+
+export interface Quote {
+  id: string;
+  content: string;
+  author?: string;
+  source?: string; // book, movie, person, etc.
+  category: QuoteCategory;
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
+}
+
+export interface QuoteFormData {
+  content: string;
+  author?: string;
+  source?: string;
+  category: QuoteCategory;
+}
+
+export const QUOTE_CATEGORY_CONFIG: Record<QuoteCategory, { label: string; description: string; color: string; bgColor: string; borderColor: string }> = {
+  daily: {
+    label: 'Daily Quotes',
+    description: 'Inspiring words for every day',
+    color: '#0c66e4',
+    bgColor: 'rgba(12,102,228,0.07)',
+    borderColor: 'rgba(12,102,228,0.2)',
+  },
+  'life-lessons': {
+    label: 'Life Lessons',
+    description: 'Wisdom earned through experience',
+    color: '#8b5cf6',
+    bgColor: 'rgba(139,92,246,0.07)',
+    borderColor: 'rgba(139,92,246,0.2)',
+  },
+  remember: {
+    label: 'Things to Remember',
+    description: 'Keep these close to heart',
+    color: '#059669',
+    bgColor: 'rgba(5,150,105,0.07)',
+    borderColor: 'rgba(5,150,105,0.2)',
+  },
+};
