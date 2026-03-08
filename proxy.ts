@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 // Routes that don't require authentication
-const PUBLIC_PAGES = ['/login', '/signup', '/forgot-password', '/reset-password'];
-// API routes that are always accessible (auth endpoints themselves)
-const PUBLIC_API_PREFIX = '/api/auth/';
+const PUBLIC_PAGES = ['/', '/login', '/signup', '/forgot-password', '/reset-password'];
+// Path prefixes that are always public (no login needed)
+const PUBLIC_PREFIXES = ['/static/', '/api/auth/'];
 
 function getSecret(): Uint8Array {
   const secret = process.env.JWT_SECRET;
@@ -24,8 +24,8 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Auth API routes are always public
-  if (pathname.startsWith(PUBLIC_API_PREFIX)) {
+  // Always-public prefixes (/static/* and /api/auth/*)
+  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 

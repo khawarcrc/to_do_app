@@ -1,21 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from') ?? '/';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
 
-  // If already logged in, redirect to app
+  // If already logged in, redirect straight to destination
   useEffect(() => {
     fetch('/api/auth/me').then((r) => {
-      if (r.ok) window.location.replace('/');
+      if (r.ok) window.location.replace(from);
     });
-  }, []);
+  }, [from]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +36,8 @@ export default function LoginPage() {
         setError(data.error ?? 'Login failed');
         return;
       }
-      window.location.replace('/');
+      // Redirect back to where they were trying to go
+      window.location.replace(from);
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -198,5 +203,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

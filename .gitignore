@@ -49,3 +49,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ignore project overview file
+PROJECT_OVERVIEW.txt
