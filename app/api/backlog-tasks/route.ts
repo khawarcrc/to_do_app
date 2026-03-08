@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import {
-  getRandomTasksByEmail,
-  createRandomTask,
-  reorderRandomTasks,
+  getBacklogTasksByEmail,
+  createBacklogTask,
+  reorderBacklogTasks,
   TaskCategory,
-} from '@/lib/randomTaskModel';
+} from '@/lib/backlogTaskModel';
 
 async function getEmail(req: NextRequest): Promise<string | null> {
   try {
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const email = await getEmail(req);
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
-    const tasks = await getRandomTasksByEmail(email);
+    const tasks = await getBacklogTasksByEmail(email);
     return NextResponse.json({ tasks });
   } catch (e) {
     console.error(e);
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { title, category } = await req.json() as { title: string; category?: TaskCategory };
-    const task = await createRandomTask(email, title, category);
+    const task = await createBacklogTask(email, title, category);
     return NextResponse.json({ task }, { status: 201 });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Failed to create task';
@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest) {
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { orderedIds } = await req.json() as { orderedIds: string[] };
-    await reorderRandomTasks(email, orderedIds);
+    await reorderBacklogTasks(email, orderedIds);
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error(e);

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { updateRandomTask, deleteRandomTask } from '@/lib/randomTaskModel';
+import { updateBacklogTask, deleteBacklogTask } from '@/lib/backlogTaskModel';
 
 async function getEmail(req: NextRequest): Promise<string | null> {
   try {
@@ -22,7 +22,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json() as { title?: string; completed?: boolean; category?: 'technical' | 'communications' };
-    const task = await updateRandomTask(id, email, body);
+    const task = await updateBacklogTask(id, email, body);
     if (!task) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ task });
   } catch (e) {
@@ -39,7 +39,7 @@ export async function DELETE(
   if (!email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
     const { id } = await params;
-    const ok = await deleteRandomTask(id, email);
+    const ok = await deleteBacklogTask(id, email);
     if (!ok) return NextResponse.json({ error: 'Not found' }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch (e) {
