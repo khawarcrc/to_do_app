@@ -71,7 +71,7 @@ const PRIORITY_ITEMS = [
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+    <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-(--text-muted)">
       {children}
     </p>
   );
@@ -95,18 +95,18 @@ function NavButton({
       onClick={onClick}
       className={`group w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all ${
         active
-          ? 'bg-[var(--accent-subtle)] text-[var(--accent)] font-medium'
-          : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
+          ? 'bg-(--accent-subtle) text-(--accent) font-medium'
+          : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-foreground'
       }`}
     >
-      <span className={active ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]'}>
+      <span className={active ? 'text-(--accent)' : 'text-(--text-muted) group-hover:text-(--text-secondary)'}>
         {icon}
       </span>
       <span className="flex-1 text-left">{label}</span>
       {count !== undefined && count > 0 && (
         <span
-          className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${
-            active ? 'bg-[var(--accent)] text-white' : 'bg-[var(--bg-hover)] text-[var(--text-muted)]'
+          className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full min-w-5 text-center ${
+            active ? 'bg-(--accent) text-white' : 'bg-(--bg-hover) text-(--text-muted)'
           }`}
         >
           {count}
@@ -139,7 +139,7 @@ export default function Sidebar({ open, filter, onFilterChange, stats, allTags, 
         <button
           onClick={onNewTask}
           className="mx-2 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border-2 border-dashed
-            text-[var(--text-muted)] hover:text-[var(--accent)] hover:border-[var(--accent)] transition-colors"
+            text-(--text-muted) hover:text-(--accent) hover:border-(--accent) transition-colors"
           style={{ borderColor: 'var(--border-default)' }}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,7 +212,7 @@ export default function Sidebar({ open, filter, onFilterChange, stats, allTags, 
                     onFilterChange({ search: filter.search === tag ? '' : tag, priority: 'all', status: 'all' })
                   }
                   icon={
-                    <span className="text-[var(--text-muted)]">
+                    <span className="text-(--text-muted)">
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                       </svg>
@@ -231,7 +231,7 @@ export default function Sidebar({ open, filter, onFilterChange, stats, allTags, 
         className="border-t px-3 py-3 shrink-0"
         style={{ borderColor: 'var(--border-default)' }}
       >
-        <div className="flex justify-between text-[11px] text-[var(--text-muted)] mb-1.5">
+        <div className="flex justify-between text-[11px] text-(--text-muted) mb-1.5">
           <span>{stats.completed}/{stats.total} done</span>
           <span>{completionPct}%</span>
         </div>
@@ -242,7 +242,7 @@ export default function Sidebar({ open, filter, onFilterChange, stats, allTags, 
           />
         </div>
         {stats.totalEstimatedTime > 0 && (
-          <p className="mt-1.5 text-[11px] text-[var(--text-muted)] text-center">
+          <p className="mt-1.5 text-[11px] text-(--text-muted) text-center">
             {formatMinutes(stats.totalEstimatedTime)} estimated
           </p>
         )}

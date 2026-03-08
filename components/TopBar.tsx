@@ -12,6 +12,11 @@ const STATIC_PAGES = [
     href: '/static/frontend-interview-guide',
     description: '30 Q&A — React, Next.js & Web Fundamentals',
   },
+  {
+    label: 'Advanced React & Next.js',
+    href: '/static/advanced-react-nextjs-interview',
+    description: '20 Advanced Q&A — Internals, Architecture & System Design',
+  },
 ];
 
 
@@ -95,7 +100,7 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
       <button
         onClick={onSidebarToggle}
         title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-        className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-hover)] text-[var(--text-secondary)]"
+        className="p-1.5 rounded-md transition-colors hover:bg-(--bg-hover) text-(--text-secondary)"
       >
         {sidebarOpen ? (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,12 +119,12 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
         title="Back to Home"
         className="flex items-center gap-2 mr-2 no-underline hover:opacity-80 transition-opacity"
       >
-        <div className="w-6 h-6 rounded-md bg-[var(--accent)] flex items-center justify-center">
+        <div className="w-6 h-6 rounded-md bg-(--accent) flex items-center justify-center">
           <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <span className="font-semibold text-sm text-[var(--text-primary)] hidden sm:block">TodoFlow</span>
+        <span className="font-semibold text-sm text-foreground hidden sm:block">TodoFlow</span>
       </Link>
 
       {/* View switcher */}
@@ -133,8 +138,8 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
             onClick={() => onViewChange(v.id)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
               view === v.id
-                ? 'bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-sm'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-hover)]'
+                ? 'bg-(--bg-surface) text-foreground shadow-sm'
+                : 'text-(--text-secondary) hover:text-foreground hover:bg-(--bg-hover)'
             }`}
           >
             {v.icon}
@@ -150,8 +155,8 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
           onClick={openDropdown}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
             staticOpen
-              ? 'bg-[var(--bg-hover)] text-[var(--text-primary)]'
-              : 'text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]'
+              ? 'bg-(--bg-hover) text-foreground'
+              : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-foreground'
           }`}
         >
           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +171,7 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
 
         {staticOpen && (
           <div
-            className="fixed w-72 rounded-lg border z-[9999]"
+            className="fixed w-72 rounded-lg border z-9999"
             style={{
               top: dropdownPos.top,
               left: dropdownPos.left,
@@ -189,7 +194,7 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
                 href={page.href}
                 onClick={() => setStaticOpen(false)}
                 style={{ display: 'block', padding: '10px 12px', textDecoration: 'none' }}
-                className="hover:bg-[var(--bg-hover)]"
+                className="hover:bg-(--bg-hover)"
               >
                 <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
                   {page.label}
@@ -210,15 +215,15 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
       <button
         onClick={onCommandPalette}
         className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs
-          text-[var(--text-muted)] border transition-colors
-          hover:text-[var(--text-secondary)] hover:bg-[var(--bg-hover)]"
+          text-(--text-muted) border transition-colors
+          hover:text-(--text-secondary) hover:bg-(--bg-hover)"
         style={{ borderColor: 'var(--border-default)' }}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <span>Search...</span>
-        <kbd className="ml-1 px-1 py-0.5 text-[10px] rounded bg-[var(--bg-base)] border" style={{ borderColor: 'var(--border-default)' }}>
+        <kbd className="ml-1 px-1 py-0.5 text-[10px] rounded bg-background border" style={{ borderColor: 'var(--border-default)' }}>
           ⌘K
         </kbd>
       </button>
@@ -246,7 +251,7 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
             href="/profile"
             title="My profile"
             className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs
-              transition-colors hover:bg-[var(--bg-hover)]"
+              transition-colors hover:bg-(--bg-hover)"
             style={{ color: 'var(--text-muted)' }}
           >
             <div
@@ -255,13 +260,13 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
             >
               {user.email[0].toUpperCase()}
             </div>
-            <span className="max-w-[120px] truncate">{user.email}</span>
+            <span className="max-w-30 truncate">{user.email}</span>
           </Link>
           {/* Mobile — icon only */}
           <Link
             href="/profile"
             title="My profile"
-            className="sm:hidden p-1.5 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
+            className="sm:hidden p-1.5 rounded-md transition-colors hover:bg-(--bg-hover)"
             style={{ color: 'var(--text-muted)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +278,7 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
           <button
             onClick={() => logout()}
             title="Sign out"
-            className="p-1.5 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
+            className="p-1.5 rounded-md transition-colors hover:bg-(--bg-hover)"
             style={{ color: 'var(--text-muted)' }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
