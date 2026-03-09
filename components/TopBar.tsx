@@ -17,6 +17,11 @@ const STATIC_PAGES = [
     href: '/static/advanced-react-nextjs-interview',
     description: '20 Advanced Q&A — Internals, Architecture & System Design',
   },
+  {
+    label: 'Backend Interview Guide',
+    href: '/static/backend-interview-guide',
+    description: '30 Q&A — APIs, Databases, Auth, Architecture & Security',
+  },
 ];
 
 
