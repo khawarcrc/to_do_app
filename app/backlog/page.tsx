@@ -24,7 +24,7 @@ import { CSS } from '@dnd-kit/utilities';
 
 type TaskCategory = 'technical' | 'communications';
 
-interface RandomTask {
+interface BacklogTask {
   id: string;
   title: string;
   completed: boolean;
@@ -34,7 +34,7 @@ interface RandomTask {
   updatedAt: string;
 }
 
-// âââ Column config ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Column config ──────────────────────────────────────────────────────────
 
 const COLUMN_CONFIG: Record<TaskCategory, {
   label: string; icon: string; color: string; border: string; bg: string; description: string;
@@ -57,10 +57,10 @@ const COLUMN_CONFIG: Record<TaskCategory, {
   },
 };
 
-// âââ Sortable task item âââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Sortable task item ─────────────────────────────────────────────────────
 
 interface TaskItemProps {
-  task: RandomTask;
+  task: BacklogTask;
   onToggle: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
@@ -238,11 +238,11 @@ function TaskItem({ task, onToggle, onDelete, onRename }: TaskItemProps) {
   );
 }
 
-// âââ Task column âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Task column ────────────────────────────────────────────────────────────
 
 interface TaskColumnProps {
   category: TaskCategory;
-  tasks: RandomTask[];
+  tasks: BacklogTask[];
   sensors: ReturnType<typeof useSensors>;
   onToggle: (id: string, completed: boolean) => void;
   onDelete: (id: string) => void;
@@ -321,7 +321,7 @@ function TaskColumn({ category, tasks, sensors, onToggle, onDelete, onRename, on
           ref={inputRef}
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
-          placeholder="Add a taskâ¦"
+          placeholder="Add a task…"
           disabled={adding}
           style={{ flex: 1, padding: '7px 11px', borderRadius: '8px', border: '1px solid var(--border-default)', backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', fontSize: '13px', outline: 'none', transition: 'border-color 0.15s', minWidth: 0 }}
           onFocus={(e) => (e.currentTarget.style.borderColor = cfg.color)}
@@ -333,7 +333,7 @@ function TaskColumn({ category, tasks, sensors, onToggle, onDelete, onRename, on
           title="Add task"
           style={{ width: '30px', height: '30px', borderRadius: '8px', border: `1px solid ${newTitle.trim() ? cfg.border : 'var(--border-default)'}`, backgroundColor: newTitle.trim() ? cfg.bg : 'transparent', color: newTitle.trim() ? cfg.color : 'var(--text-muted)', cursor: newTitle.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '18px', lineHeight: '1', fontWeight: 700, transition: 'all 0.15s' }}
         >
-          {adding ? 'â¦' : '+'}
+          {adding ? '…' : '+'}
         </button>
       </form>
 
@@ -361,12 +361,12 @@ function TaskColumn({ category, tasks, sensors, onToggle, onDelete, onRename, on
   );
 }
 
-// âââ Main page ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+// ─── Main page ──────────────────────────────────────────────────────────────
 
-export default function RandomTasksPage() {
+export default function BacklogPage() {
   const { user, logout, setUser, setInitialising } = useAuthStore();
   const [mounted, setMounted] = useState(false);
-  const [tasks, setTasks] = useState<RandomTask[]>([]);
+  const [tasks, setTasks] = useState<BacklogTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -388,7 +388,7 @@ export default function RandomTasksPage() {
 
   const loadTasks = useCallback(() => {
     setLoading(true);
-    fetch('/api/random-tasks')
+    fetch('/api/backlog-tasks')
       .then((r) => r.json())
       .then((data) => { if (data.tasks) setTasks(data.tasks); })
       .catch(() => setError('Failed to load tasks'))
@@ -398,12 +398,12 @@ export default function RandomTasksPage() {
   useEffect(() => { loadTasks(); }, [loadTasks]);
 
   async function handleAdd(category: TaskCategory, title: string) {
-    const res = await fetch('/api/random-tasks', {
+    const res = await fetch('/api/backlog-tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, category }),
     });
-    const data = await res.json() as { task?: RandomTask; error?: string };
+    const data = await res.json() as { task?: BacklogTask; error?: string };
     if (!res.ok) throw new Error(data.error ?? 'Failed');
     setTasks((prev) => [...prev, data.task!]);
   }
@@ -411,21 +411,21 @@ export default function RandomTasksPage() {
   async function handleToggle(id: string, completed: boolean) {
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, completed } : t));
     try {
-      await fetch(`/api/random-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed }) });
+      await fetch(`/api/backlog-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ completed }) });
     } catch { loadTasks(); }
   }
 
   async function handleRename(id: string, title: string) {
     setTasks((prev) => prev.map((t) => t.id === id ? { ...t, title } : t));
     try {
-      await fetch(`/api/random-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }) });
+      await fetch(`/api/backlog-tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title }) });
     } catch { loadTasks(); }
   }
 
   async function handleDelete(id: string) {
     setTasks((prev) => prev.filter((t) => t.id !== id));
     try {
-      await fetch(`/api/random-tasks/${id}`, { method: 'DELETE' });
+      await fetch(`/api/backlog-tasks/${id}`, { method: 'DELETE' });
     } catch { loadTasks(); }
   }
 
@@ -438,7 +438,7 @@ export default function RandomTasksPage() {
       const oldIndex = catTasks.findIndex((t) => t.id === active.id);
       const newIndex = catTasks.findIndex((t) => t.id === over.id);
       const reordered = arrayMove(catTasks, oldIndex, newIndex);
-      fetch('/api/random-tasks', {
+      fetch('/api/backlog-tasks', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderedIds: reordered.map((t) => t.id) }),
@@ -462,7 +462,7 @@ export default function RandomTasksPage() {
             </svg>
             Home
           </Link>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>Random Tasks</span>
+          <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>BackLog</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <ThemeToggle />
@@ -480,7 +480,7 @@ export default function RandomTasksPage() {
       {/* Sub-header */}
       <div style={{ flexShrink: 0, padding: '10px clamp(1rem, 3vw, 2rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', gap: '16px', backgroundColor: 'var(--bg-surface)' }}>
         <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
-          Double-click a title to edit Â· Drag â ¿ to reorder within each column
+          Double-click a title to edit · Drag ⠿ to reorder within each column
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
           {total > 0 && (
@@ -496,7 +496,7 @@ export default function RandomTasksPage() {
                   onClick={async () => {
                     const completed = tasks.filter((t) => t.completed);
                     setTasks((prev) => prev.filter((t) => !t.completed));
-                    await Promise.all(completed.map((t) => fetch(`/api/random-tasks/${t.id}`, { method: 'DELETE' })));
+                    await Promise.all(completed.map((t) => fetch(`/api/backlog-tasks/${t.id}`, { method: 'DELETE' })));
                   }}
                   style={{ fontSize: '12px', color: '#ef4444', background: 'none', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', padding: '3px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
                 >
@@ -506,7 +506,7 @@ export default function RandomTasksPage() {
             </>
           )}
           {error && (
-            <span style={{ fontSize: '12px', color: '#ef4444', cursor: 'pointer' }} onClick={() => setError('')} title="Dismiss">â  {error}</span>
+            <span style={{ fontSize: '12px', color: '#ef4444', cursor: 'pointer' }} onClick={() => setError('')} title="Dismiss">⚠ {error}</span>
           )}
         </div>
       </div>
@@ -514,7 +514,7 @@ export default function RandomTasksPage() {
       {/* Board */}
       {loading ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '14px', gap: '10px' }}>
-          Loading tasksâ¦
+          Loading tasks…
         </div>
       ) : (
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '20px clamp(1rem, 3vw, 2rem)', display: 'flex', gap: '16px', alignItems: 'stretch' }}>
