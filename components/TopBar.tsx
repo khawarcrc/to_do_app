@@ -24,6 +24,19 @@ const STATIC_PAGES = [
   },
 ];
 
+const STUDY_GUIDE_PAGES = [
+  {
+    label: 'AI Engineering Roadmap',
+    href: '/static/ai-engineering-roadmap',
+    description: '7-Phase · 1-Month Sprint to Job-Ready AI/ML Engineering',
+  },
+  {
+    label: 'Docker & Containerization',
+    href: '/static/docker-containerization-guide',
+    description: '35 Q&A · 12 Scenarios · Source of Truth for DevOps Engineers',
+  },
+];
+
 
 interface Props {
   view: ViewType;
@@ -74,18 +87,36 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
   const btnRef = useRef<HTMLButtonElement>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
+  const [studyGuideOpen, setStudyGuideOpen] = useState(false);
+  const studyGuideRef = useRef<HTMLDivElement>(null);
+  const studyGuideBtnRef = useRef<HTMLButtonElement>(null);
+  const [studyGuideDropdownPos, setStudyGuideDropdownPos] = useState({ top: 0, left: 0 });
+
   function openDropdown() {
     if (btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
       setDropdownPos({ top: rect.bottom + 4, left: rect.left });
     }
+    setStudyGuideOpen(false);
     setStaticOpen((o) => !o);
+  }
+
+  function openStudyGuideDropdown() {
+    if (studyGuideBtnRef.current) {
+      const rect = studyGuideBtnRef.current.getBoundingClientRect();
+      setStudyGuideDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setStaticOpen(false);
+    setStudyGuideOpen((o) => !o);
   }
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (staticRef.current && !staticRef.current.contains(e.target as Node)) {
         setStaticOpen(false);
+      }
+      if (studyGuideRef.current && !studyGuideRef.current.contains(e.target as Node)) {
+        setStudyGuideOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -151,6 +182,66 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
             <span className="hidden sm:inline">{v.label}</span>
           </button>
         ))}
+      </div>
+
+      {/* Study Guide dropdown */}
+      <div ref={studyGuideRef} className="relative">
+        <button
+          ref={studyGuideBtnRef}
+          onClick={openStudyGuideDropdown}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            studyGuideOpen
+              ? 'bg-(--bg-hover) text-foreground'
+              : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-foreground'
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <span className="hidden sm:inline">Study Guide</span>
+          <svg className={`w-3 h-3 transition-transform ${studyGuideOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {studyGuideOpen && (
+          <div
+            className="fixed w-72 rounded-lg border z-9999"
+            style={{
+              top: studyGuideDropdownPos.top,
+              left: studyGuideDropdownPos.left,
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-default)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div
+              className="px-3 py-2"
+              style={{ borderBottom: '1px solid var(--border-default)' }}
+            >
+              <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', margin: 0 }}>
+                Study Guides
+              </p>
+            </div>
+            {STUDY_GUIDE_PAGES.map((page) => (
+              <Link
+                key={page.href}
+                href={page.href}
+                onClick={() => setStudyGuideOpen(false)}
+                style={{ display: 'block', padding: '10px 12px', textDecoration: 'none' }}
+                className="hover:bg-(--bg-hover)"
+              >
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                  {page.label}
+                </p>
+                <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  {page.description}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Static Pages dropdown */}
