@@ -96,6 +96,14 @@ const STATIC_LINKS: { label: string; href: string; description: string }[] = [
   },
 ];
 
+const STUDY_GUIDE_LINKS: { label: string; href: string; description: string }[] = [
+  {
+    label: "AI Engineering Roadmap",
+    href: "/static/ai-engineering-roadmap",
+    description: "7-Phase · 1-Month Sprint to Job-Ready AI/ML Engineering",
+  },
+];
+
 const DYNAMIC_LINKS = [
   {
     label: "Task Manager",
@@ -278,6 +286,7 @@ export default function LandingPage() {
   const { user, logout, setUser, setInitialising } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [staticOpen, setStaticOpen] = useState(false);
+  const [studyGuideOpen, setStudyGuideOpen] = useState(false);
   const [dynamicOpen, setDynamicOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -418,6 +427,7 @@ export default function LandingPage() {
               open={staticOpen}
               onToggle={() => {
                 setStaticOpen((p) => !p);
+                setStudyGuideOpen(false);
                 setDynamicOpen(false);
               }}
               onClose={() => setStaticOpen(false)}
@@ -479,6 +489,52 @@ export default function LandingPage() {
               )}
             </NavDropdown>
 
+            {/* Study Guide dropdown */}
+            <NavDropdown
+              label="Study Guide"
+              badge={`${STUDY_GUIDE_LINKS.length}`}
+              open={studyGuideOpen}
+              onToggle={() => {
+                setStudyGuideOpen((p) => !p);
+                setStaticOpen(false);
+                setDynamicOpen(false);
+              }}
+              onClose={() => setStudyGuideOpen(false)}
+            >
+              {STUDY_GUIDE_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setStudyGuideOpen(false)}
+                  style={{
+                    display: "block",
+                    padding: "10px 14px",
+                    textDecoration: "none",
+                    borderBottom: "1px solid var(--border-subtle)",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "13.5px",
+                      fontWeight: 600,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    {item.label}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "var(--text-muted)",
+                      marginTop: "2px",
+                    }}
+                  >
+                    {item.description}
+                  </div>
+                </Link>
+              ))}
+            </NavDropdown>
+
             {/* Dynamic dropdown */}
             <NavDropdown
               label="Dynamic"
@@ -487,6 +543,7 @@ export default function LandingPage() {
               onToggle={() => {
                 setDynamicOpen((p) => !p);
                 setStaticOpen(false);
+                setStudyGuideOpen(false);
               }}
               onClose={() => setDynamicOpen(false)}
             >
@@ -752,6 +809,47 @@ export default function LandingPage() {
                 </Link>
               ))
             )}
+
+            {/* Divider */}
+            <div
+              style={{
+                height: "1px",
+                backgroundColor: "var(--border-subtle)",
+                margin: "6px 0",
+              }}
+            />
+
+            {/* Section label: Study Guide */}
+            <div
+              style={{
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "var(--text-muted)",
+                padding: "2px 8px 4px",
+              }}
+            >
+              Study Guide
+            </div>
+            {STUDY_GUIDE_LINKS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: "block",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  textDecoration: "none",
+                  color: "var(--text-primary)",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
 
             {/* Divider */}
             <div
