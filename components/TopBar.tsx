@@ -28,12 +28,14 @@ const STUDY_GUIDE_PAGES = [
   {
     label: 'AI Engineering Roadmap',
     href: '/static/ai-engineering-roadmap',
-    description: '7-Phase · 1-Month Sprint to Job-Ready AI/ML Engineering',
   },
   {
     label: 'Docker & Containerization',
     href: '/static/docker-containerization-guide',
-    description: '35 Q&A · 12 Scenarios · Source of Truth for DevOps Engineers',
+  },
+  {
+    label: 'Two-Path AI & Data Roadmap',
+    href: '/static/two-path-roadmap',
   },
 ];
 
@@ -229,14 +231,11 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
                 key={page.href}
                 href={page.href}
                 onClick={() => setStudyGuideOpen(false)}
-                style={{ display: 'block', padding: '10px 12px', textDecoration: 'none' }}
+                style={{ display: 'block', padding: '7px 12px', textDecoration: 'none' }}
                 className="hover:bg-(--bg-hover)"
               >
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {page.label}
-                </p>
-                <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {page.description}
                 </p>
               </Link>
             ))}
