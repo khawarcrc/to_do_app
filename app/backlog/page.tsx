@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import Link from 'next/link';
-import ThemeToggle from '@/components/ThemeToggle';
-import { useAuthStore } from '@/store/authStore';
+import MainNav from '@/components/MainNav';
 import {
   DndContext,
   closestCenter,
@@ -364,8 +362,6 @@ function TaskColumn({ category, tasks, sensors, onToggle, onDelete, onRename, on
 // ─── Main page ──────────────────────────────────────────────────────────────
 
 export default function BacklogPage() {
-  const { user, logout, setUser, setInitialising } = useAuthStore();
-  const [mounted, setMounted] = useState(false);
   const [tasks, setTasks] = useState<BacklogTask[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -375,16 +371,7 @@ export default function BacklogPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  useEffect(() => {
-    setMounted(true);
-    fetch('/api/auth/me')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data?.email) setUser({ email: data.email, sid: data.sid ?? '', createdAt: data.createdAt });
-      })
-      .catch(() => {})
-      .finally(() => setInitialising(false));
-  }, [setUser, setInitialising]);
+
 
   const loadTasks = useCallback(() => {
     setLoading(true);
@@ -453,29 +440,7 @@ export default function BacklogPage() {
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)', fontFamily: 'var(--font-sans, system-ui, sans-serif)', overflow: 'hidden' }}>
 
-      {/* Nav */}
-      <nav style={{ flexShrink: 0, zIndex: 50, backgroundColor: 'var(--bg-navbar)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border-subtle)', padding: '0 clamp(1rem, 4vw, 2.5rem)', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', textDecoration: 'none', fontSize: '13px', fontWeight: 500, padding: '5px 10px', borderRadius: '7px', border: '1px solid var(--border-subtle)' }}>
-            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Home
-          </Link>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>BackLog</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ThemeToggle />
-          {mounted && user?.email && (
-            <Link href="/app" style={{ fontSize: '13px', fontWeight: 500, color: 'var(--accent)', textDecoration: 'none', padding: '5px 12px', borderRadius: '7px', border: '1px solid var(--accent)' }}>App</Link>
-          )}
-          {mounted && user?.email ? (
-            <button onClick={() => void logout()} style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-muted)', background: 'none', border: '1px solid var(--border-default)', borderRadius: '7px', padding: '5px 12px', cursor: 'pointer' }}>Sign out</button>
-          ) : mounted ? (
-            <Link href="/login" style={{ fontSize: '13px', fontWeight: 500, color: '#fff', textDecoration: 'none', padding: '5px 14px', borderRadius: '7px', backgroundColor: 'var(--accent)' }}>Sign in</Link>
-          ) : null}
-        </div>
-      </nav>
+      <MainNav />
 
       {/* Sub-header */}
       <div style={{ flexShrink: 0, padding: '10px clamp(1rem, 3vw, 2rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', gap: '16px', backgroundColor: 'var(--bg-surface)' }}>

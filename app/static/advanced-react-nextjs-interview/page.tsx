@@ -1,1951 +1,1196 @@
-export const metadata = {
+import { Fragment } from "react";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Advanced React & Next.js — System Design Interview Guide",
   description:
     "20 advanced interview questions covering React internals, concurrent features, Next.js architecture, performance, and production system design.",
 };
 
-const css = `
-body { overflow: auto !important; height: auto !important; }
+/* ═══════════════════════════════════════════════════════════
+   TYPES — pure JSON data structures, zero HTML
+   ═══════════════════════════════════════════════════════════ */
+type Seg = string | { c: string } | { b: string };
+type CodeTok = string | [string, string];
 
+interface Question {
+  id: number;
+  question: Seg[];
+  answer: Seg[];
+  tag: string;
+  tagType: string;
+  code: { file: string; lang: string; lines: CodeTok[][] } | null;
+  callout: { type: string; content: Seg[] } | null;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Minimal CSS — only things Tailwind cannot express inline:
+   font imports, inline-code styling, tag badges, callouts,
+   and syntax-highlight token colors.
+   ═══════════════════════════════════════════════════════════ */
+const css = `
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300&family=JetBrains+Mono:wght@300;400;500;700&family=Epilogue:wght@300;400;500;700&display=swap');
 
-:root {
-  --bg:       #080c10;
-  --surface:  #0d1117;
-  --surface2: #161b22;
-  --border:   #21262d;
-  --border2:  #30363d;
-  --text:     #e6edf3;
-  --muted:    #7d8590;
-  --dim:      #484f58;
-  --accent:   #f78166;
-  --accent2:  #58a6ff;
-  --accent3:  #3fb950;
-  --accent4:  #d2a8ff;
-  --accent5:  #ffa657;
-  --warn:     #e3b341;
-  --s-kw:     #ff7b72;
-  --s-fn:     #d2a8ff;
-  --s-str:    #a5d6ff;
-  --s-num:    #f2cc60;
-  --s-cmt:    #8b949e;
-  --s-tag:    #7ee787;
-  --s-attr:   #79c0ff;
-  --s-op:     #ff7b72;
-  --s-type:   #ffa657;
-  --s-plain:  #e6edf3;
-}
+body { overflow: auto !important; height: auto !important; }
 
-*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-html { scroll-behavior: smooth; }
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Epilogue', sans-serif;
-  font-weight: 300;
-  font-size: 14.5px;
-  line-height: 1.8;
-}
+.ff-display { font-family: 'Fraunces', serif; }
+.ff-mono    { font-family: 'JetBrains Mono', monospace; }
+.ff-body    { font-family: 'Epilogue', sans-serif; }
 
-.adv-back {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 9999;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  color: var(--muted);
-  padding: 6px 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  text-decoration: none;
-  border-radius: 4px;
-  transition: color 0.15s, border-color 0.15s;
-}
-.adv-back:hover { color: var(--text); border-color: var(--accent2); }
-
-/* ─── COVER ─────────────────────────────────────────── */
-.cover {
-  min-height: 100vh;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border);
-}
-.cover-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: calc(100vh - 60px);
-}
-.cover-left {
-  padding: 80px 64px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  border-right: 1px solid var(--border);
-  position: relative;
-  z-index: 1;
-}
-.cover-right {
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 64px;
-  position: relative;
-  overflow: hidden;
-}
-.cover-right::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(var(--border) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.5;
-}
-.cover-right::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 30%, var(--surface) 80%);
-}
-.cover-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--accent3);
-  border: 1px solid var(--accent3);
-  padding: 4px 12px;
-  margin-bottom: 36px;
-  width: fit-content;
-}
-.cover-badge::before { content: '▶'; font-size: 8px; }
-.cover h1 {
-  font-family: 'Fraunces', serif;
-  font-size: clamp(44px, 5.5vw, 72px);
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -2px;
-  color: var(--text);
-  margin-bottom: 8px;
-}
-.cover h1 em {
-  font-style: italic;
-  color: var(--accent);
-}
-.cover-sub {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: var(--accent2);
-  margin-bottom: 40px;
-  letter-spacing: 0.02em;
-}
-.cover-desc {
-  font-size: 15px;
-  color: var(--muted);
-  max-width: 420px;
-  line-height: 1.7;
-  border-left: 2px solid var(--accent);
-  padding-left: 20px;
-  margin-bottom: 56px;
-}
-.cover-stats {
-  display: flex;
-  gap: 40px;
-}
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.stat-value {
-  font-family: 'Fraunces', serif;
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-}
-.stat-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--dim);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.cover-code-preview {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 420px;
-}
-.cover-code-preview .code-win {
-  background: #0d1117;
-  border: 1px solid var(--border2);
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.6);
-}
-.code-win-bar {
-  background: var(--surface2);
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border-bottom: 1px solid var(--border);
-}
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.dot-r { background: #ff5f57; }
-.dot-y { background: #febc2e; }
-.dot-g { background: #28c840; }
-.code-win-title {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  margin-left: 8px;
-}
-.code-win pre {
-  padding: 20px 24px;
-  font-size: 12px;
-  line-height: 1.7;
-  overflow-x: auto;
-}
-.cover-bottom {
-  height: 60px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 64px;
-  gap: 32px;
-}
-.cover-bottom-item {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--dim);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.cover-bottom-item span { color: var(--muted); }
-
-/* ─── TOC ─────────────────────────────────────────── */
-.toc-wrap {
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-}
-.toc-header {
-  padding: 48px 80px 32px;
-  display: flex;
-  align-items: baseline;
-  gap: 24px;
-  border-bottom: 1px solid var(--border);
-}
-.toc-header h2 {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--accent2);
-}
-.toc-header .toc-count {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--dim);
-}
-.toc-body {
-  padding: 32px 80px 48px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2px 48px;
-}
-.toc-row {
-  display: grid;
-  grid-template-columns: 32px 1fr auto;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--border);
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 13px;
-  transition: color 0.15s;
-}
-.toc-row:hover { color: var(--text); }
-.toc-row:hover .toc-n { color: var(--accent); }
-.toc-n {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--dim);
-  transition: color 0.15s;
-}
-.toc-tag {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  padding: 2px 7px;
-  border-radius: 2px;
-  white-space: nowrap;
-}
-.tag-react { background: rgba(88,166,255,0.12); color: var(--accent2); border: 1px solid rgba(88,166,255,0.2); }
-.tag-next  { background: rgba(247,129,102,0.12); color: var(--accent);  border: 1px solid rgba(247,129,102,0.2); }
-.tag-sys   { background: rgba(63,185,80,0.12);  color: var(--accent3); border: 1px solid rgba(63,185,80,0.2);  }
-.tag-perf  { background: rgba(210,168,255,0.12); color: var(--accent4); border: 1px solid rgba(210,168,255,0.2); }
-
-/* ─── MAIN ─────────────────────────────────────────── */
-.main {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 72px 100px;
-}
-.cat-divider {
-  margin: 80px 0 48px;
-  position: relative;
-}
-.cat-divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: var(--border);
-}
-.cat-divider-inner {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--bg);
-  padding-right: 24px;
-}
-.cat-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  color: var(--dim);
-  letter-spacing: 0.1em;
-}
-.cat-title {
-  font-family: 'Fraunces', serif;
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.5px;
-}
-.cat-pill {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-/* ─── QUESTION CARD ─────────────────────────────────── */
-.qcard {
-  margin-bottom: 64px;
-  position: relative;
-}
-.qcard-inner {
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-  background: var(--surface);
-  transition: border-color 0.2s;
-}
-.qcard:hover .qcard-inner {
-  border-color: var(--border2);
-}
-.qcard-head {
-  padding: 20px 28px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: start;
-  gap: 16px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface2);
-}
-.qcard-num {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--accent);
-  margin-top: 3px;
-  min-width: 24px;
-}
-.qcard-q {
-  font-family: 'Fraunces', serif;
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--text);
-  letter-spacing: -0.3px;
-}
-.qcard-body {
-  padding: 24px 28px;
-}
-.qcard-answer {
-  font-size: 14px;
-  line-height: 1.85;
-  color: #b1bac4;
-}
-.qcard-answer code {
+.ic {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  background: rgba(110,118,129,0.1);
-  border: 1px solid var(--border2);
+  background: var(--bg-hover);
+  border: 1px solid var(--border-default);
   padding: 1px 6px;
   border-radius: 3px;
-  color: var(--s-type);
+  color: var(--accent);
 }
 
-/* ─── CODE BLOCK ─────────────────────────────────────── */
-.cb {
-  margin: 20px 0 4px;
-  border: 1px solid var(--border2);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.cb-bar {
-  background: #161b22;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-}
-.cb-filename {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.cb-filename::before {
+.cb-dot::before {
   content: '';
   display: inline-block;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent3);
-}
-.cb-lang {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  color: var(--dim);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-.cb pre {
-  background: #0d1117;
-  padding: 20px 24px;
-  overflow-x: auto;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  line-height: 1.7;
-  color: var(--s-plain);
-  tab-size: 2;
+  background: #3fb950;
 }
 
-/* syntax */
-.kw   { color: var(--s-kw); }
-.fn   { color: var(--s-fn); }
-.str  { color: var(--s-str); }
-.num  { color: var(--s-num); }
-.cmt  { color: var(--s-cmt); font-style: italic; }
-.tag  { color: var(--s-tag); }
-.attr { color: var(--s-attr); }
-.tp   { color: var(--s-type); }
-.op   { color: var(--s-op); }
+/* tag badge colors — theme-aware */
+:root {
+  --tag-react-bg: rgba(12,102,228,0.08);
+  --tag-react-text: #0c66e4;
+  --tag-react-border: rgba(12,102,228,0.18);
+  --tag-next-bg: rgba(207,92,17,0.08);
+  --tag-next-text: #cf5c11;
+  --tag-next-border: rgba(207,92,17,0.18);
+  --tag-sys-bg: rgba(26,127,55,0.08);
+  --tag-sys-text: #1a7f37;
+  --tag-sys-border: rgba(26,127,55,0.18);
+  --tag-perf-bg: rgba(130,80,223,0.08);
+  --tag-perf-text: #8250df;
+  --tag-perf-border: rgba(130,80,223,0.18);
+  --callout-warn-border: #9a6700;
+  --callout-warn-bg: rgba(154,103,0,0.06);
+  --callout-warn-text: #9a6700;
+  --callout-info-border: #0c66e4;
+  --callout-info-bg: rgba(12,102,228,0.06);
+  --callout-info-text: #0c66e4;
+  --callout-good-border: #1a7f37;
+  --callout-good-bg: rgba(26,127,55,0.06);
+  --callout-good-text: #1a7f37;
+}
+.dark {
+  --tag-react-bg: rgba(88,166,255,0.12);
+  --tag-react-text: #58a6ff;
+  --tag-react-border: rgba(88,166,255,0.2);
+  --tag-next-bg: rgba(247,129,102,0.12);
+  --tag-next-text: #f78166;
+  --tag-next-border: rgba(247,129,102,0.2);
+  --tag-sys-bg: rgba(63,185,80,0.12);
+  --tag-sys-text: #3fb950;
+  --tag-sys-border: rgba(63,185,80,0.2);
+  --tag-perf-bg: rgba(210,168,255,0.12);
+  --tag-perf-text: #d2a8ff;
+  --tag-perf-border: rgba(210,168,255,0.2);
+  --callout-warn-border: #e3b341;
+  --callout-warn-bg: rgba(227,179,65,0.06);
+  --callout-warn-text: #e3b341;
+  --callout-info-border: #58a6ff;
+  --callout-info-bg: rgba(88,166,255,0.06);
+  --callout-info-text: #58a6ff;
+  --callout-good-border: #3fb950;
+  --callout-good-bg: rgba(63,185,80,0.06);
+  --callout-good-text: #3fb950;
+}
 
-/* ─── CALLOUT ─────────────────────────────────────────── */
+.tag-react { background: var(--tag-react-bg); color: var(--tag-react-text); border: 1px solid var(--tag-react-border); }
+.tag-next  { background: var(--tag-next-bg);  color: var(--tag-next-text);  border: 1px solid var(--tag-next-border); }
+.tag-sys   { background: var(--tag-sys-bg);   color: var(--tag-sys-text);   border: 1px solid var(--tag-sys-border); }
+.tag-perf  { background: var(--tag-perf-bg);  color: var(--tag-perf-text);  border: 1px solid var(--tag-perf-border); }
+
+/* callouts */
 .callout {
   margin: 16px 0 4px;
   padding: 14px 18px;
-  border-left: 3px solid var(--warn);
-  background: rgba(227,179,65,0.06);
+  border-left: 3px solid var(--callout-warn-border);
+  background: var(--callout-warn-bg);
   border-radius: 0 3px 3px 0;
-}
-.callout.info {
-  border-color: var(--accent2);
-  background: rgba(88,166,255,0.06);
-}
-.callout.good {
-  border-color: var(--accent3);
-  background: rgba(63,185,80,0.06);
 }
 .callout p {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
-  color: var(--muted);
+  color: var(--text-secondary);
   line-height: 1.7;
 }
-.callout strong { color: var(--warn); font-weight: 500; }
-.callout.info strong { color: var(--accent2); }
-.callout.good strong { color: var(--accent3); }
+.callout strong { color: var(--callout-warn-text); font-weight: 500; }
+.callout .ic { font-size: 11px; }
+.callout.info { border-color: var(--callout-info-border); background: var(--callout-info-bg); }
+.callout.info strong { color: var(--callout-info-text); }
+.callout.good { border-color: var(--callout-good-border); background: var(--callout-good-bg); }
+.callout.good strong { color: var(--callout-good-text); }
 
-/* ─── FOOTER ─────────────────────────────────────────── */
-.footer {
-  border-top: 1px solid var(--border);
-  padding: 32px 80px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--surface);
-}
-.footer-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.footer-logo {
-  font-family: 'Fraunces', serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
-  font-style: italic;
-}
-.footer-sep { color: var(--border2); }
-.footer-desc {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--dim);
-}
-.footer-right {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--dim);
-  text-align: right;
-  line-height: 1.9;
-}
+/* syntax tokens */
+.kw   { color: #ff7b72; }
+.fn   { color: #d2a8ff; }
+.str  { color: #a5d6ff; }
+.num  { color: #f2cc60; }
+.cmt  { color: #8b949e; font-style: italic; }
+.tag  { color: #7ee787; }
+.attr { color: #79c0ff; }
+.tp   { color: #ffa657; }
+.op   { color: #ff7b72; }
 
-@media (max-width: 900px) {
-  .cover-grid { grid-template-columns: 1fr; }
-  .cover-right { display: none; }
-  .cover-left, .toc-header, .toc-body, .cover-bottom, .footer { padding-left: 32px; padding-right: 32px; }
-  .toc-body { grid-template-columns: 1fr; }
-  .main { padding: 0 28px 80px; }
+@media print {
+  [id^="q"] { page-break-inside: avoid; }
 }
 `;
 
-// Pre block HTML strings for dangerouslySetInnerHTML
-const coverPre = `<span class="cmt">// React Fiber — work loop</span>
-<span class="kw">function</span> <span class="fn">workLoopConcurrent</span>() {
-  <span class="kw">while</span> (workInProgress !== <span class="kw">null</span>
-    &amp;&amp; !<span class="fn">shouldYield</span>()) {
-    <span class="fn">performUnitOfWork</span>(workInProgress);
-  }
-}
-
-<span class="cmt">// Each fiber = unit of work</span>
-<span class="kw">interface</span> <span class="tp">Fiber</span> {
-  type:         <span class="tp">ElementType</span>;
-  stateNode:    <span class="tp">Node</span> | <span class="kw">null</span>;
-  child:        <span class="tp">Fiber</span> | <span class="kw">null</span>;
-  sibling:      <span class="tp">Fiber</span> | <span class="kw">null</span>;
-  return:       <span class="tp">Fiber</span> | <span class="kw">null</span>;
-  pendingProps: <span class="tp">Props</span>;
-  memoizedState:<span class="tp">Hook</span> | <span class="kw">null</span>;
-  lanes:        <span class="tp">Lanes</span>; <span class="cmt">// priority</span>
-}
-
-<span class="cmt">// Double buffering</span>
-<span class="kw">const</span> current     = fiber.alternate;
-<span class="kw">const</span> workInProg  = <span class="fn">createWorkInProgress</span>(
-  current, pendingProps
-);`;
-
-const q1Pre = `<span class="cmt">// Simplified Fiber node shape</span>
-<span class="kw">interface</span> <span class="tp">FiberNode</span> {
-  tag:           <span class="tp">WorkTag</span>;        <span class="cmt">// FunctionComponent, HostComponent, etc.</span>
-  type:          <span class="tp">any</span>;            <span class="cmt">// e.g. 'div' | MyComponent</span>
-  stateNode:     <span class="tp">any</span>;            <span class="cmt">// DOM node or class instance</span>
-  pendingProps:  <span class="tp">Props</span>;
-  memoizedProps: <span class="tp">Props</span>;
-  memoizedState: <span class="tp">Hook</span> | <span class="kw">null</span>;   <span class="cmt">// hook linked list for function components</span>
-  child:         <span class="tp">FiberNode</span> | <span class="kw">null</span>;
-  sibling:       <span class="tp">FiberNode</span> | <span class="kw">null</span>;
-  return:        <span class="tp">FiberNode</span> | <span class="kw">null</span>; <span class="cmt">// parent</span>
-  alternate:     <span class="tp">FiberNode</span> | <span class="kw">null</span>; <span class="cmt">// double buffer pair</span>
-  lanes:         <span class="tp">Lanes</span>;           <span class="cmt">// scheduled priority bitmask</span>
-  flags:         <span class="tp">Flags</span>;           <span class="cmt">// Placement | Update | Deletion</span>
-}`;
-
-const q2Pre = `<span class="cmt">// ❌ BAD: type changes → full unmount/remount every toggle</span>
-{isAdmin ? <span class="tag">&lt;AdminPanel</span> /&gt; : <span class="tag">&lt;UserPanel</span> /&gt;}
-
-<span class="cmt">// ✅ GOOD: same type, only props change → in-place update</span>
-<span class="tag">&lt;Panel</span> <span class="attr">variant</span>={isAdmin ? <span class="str">"admin"</span> : <span class="str">"user"</span>} /&gt;
-
-<span class="cmt">// ❌ BAD: index key breaks reconciliation on sort/filter</span>
-items.<span class="fn">map</span>((item, i) =&gt; <span class="tag">&lt;Row</span> <span class="attr">key</span>={i} {...item} /&gt;)
-
-<span class="cmt">// ✅ GOOD: stable identity key</span>
-items.<span class="fn">map</span>(item =&gt; <span class="tag">&lt;Row</span> <span class="attr">key</span>={item.id} {...item} /&gt;)`;
-
-const q3Pre = `<span class="kw">function</span> <span class="fn">Search</span>() {
-  <span class="kw">const</span> [query, setQuery] = <span class="fn">useState</span>(<span class="str">""</span>);
-  <span class="kw">const</span> [results, setResults] = <span class="fn">useState</span>([]);
-  <span class="kw">const</span> [isPending, startTransition] = <span class="fn">useTransition</span>();
-
-  <span class="kw">const</span> <span class="fn">handleChange</span> = (e: <span class="tp">ChangeEvent&lt;HTMLInputElement&gt;</span>) =&gt; {
-    setQuery(e.target.value);              <span class="cmt">// urgent — keep input snappy</span>
-    <span class="fn">startTransition</span>(() =&gt; {
-      setResults(<span class="fn">heavyFilter</span>(e.target.value)); <span class="cmt">// non-urgent</span>
-    });
-  };
-
-  <span class="kw">return</span> (
-    <span class="tag">&lt;&gt;</span>
-      <span class="tag">&lt;input</span> <span class="attr">value</span>={query} <span class="attr">onChange</span>={handleChange} /&gt;
-      {isPending &amp;&amp; <span class="tag">&lt;Spinner</span> /&gt;}
-      <span class="tag">&lt;ResultList</span> <span class="attr">items</span>={results} /&gt;
-    <span class="tag">&lt;/&gt;</span>
-  );
-}`;
-
-const q4Pre = `<span class="cmt">// HTML shell renders instantly; each boundary streams in</span>
-<span class="kw">export default function</span> <span class="fn">Dashboard</span>() {
-  <span class="kw">return</span> (
-    <span class="tag">&lt;main&gt;</span>
-      <span class="tag">&lt;Header</span> /&gt;                     {<span class="cmt">/* static — renders immediately */</span>}
-      <span class="tag">&lt;Suspense</span> <span class="attr">fallback</span>=<span class="str">&lt;MetricsSkeleton /&gt;</span>&gt;
-        <span class="tag">&lt;MetricsPanel</span> /&gt;              {<span class="cmt">/* streams when DB query resolves */</span>}
-      <span class="tag">&lt;/Suspense&gt;</span>
-      <span class="tag">&lt;Suspense</span> <span class="attr">fallback</span>=<span class="str">&lt;FeedSkeleton /&gt;</span>&gt;
-        <span class="tag">&lt;ActivityFeed</span> /&gt;              {<span class="cmt">/* streams independently */</span>}
-      <span class="tag">&lt;/Suspense&gt;</span>
-    <span class="tag">&lt;/main&gt;</span>
-  );
-}`;
-
-const q5Pre = `<span class="str">"use client"</span>;
-
-<span class="kw">async function</span> <span class="fn">toggleLike</span>(postId: <span class="tp">string</span>): <span class="tp">Promise&lt;void&gt;</span> {
-  <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">\`/api/posts/\${postId}/like\`</span>, { method: <span class="str">"POST"</span> });
-}
-
-<span class="kw">function</span> <span class="fn">LikeButton</span>({ postId, initialLikes }: <span class="tp">Props</span>) {
-  <span class="kw">const</span> [likes, setLikes] = <span class="fn">useState</span>(initialLikes);
-  <span class="kw">const</span> [optimisticLikes, addOptimistic] = <span class="fn">useOptimistic</span>(
-    likes,
-    (current, delta: <span class="tp">number</span>) =&gt; current + delta
-  );
-
-  <span class="kw">return</span> (
-    <span class="tag">&lt;button</span>
-      <span class="attr">onClick</span>={<span class="kw">async</span> () =&gt; {
-        <span class="fn">addOptimistic</span>(<span class="num">1</span>);          <span class="cmt">// instant UI update</span>
-        <span class="kw">await</span> <span class="fn">toggleLike</span>(postId); <span class="cmt">// real mutation</span>
-        <span class="fn">setLikes</span>(l =&gt; l + <span class="num">1</span>);    <span class="cmt">// confirm real state</span>
-      }}
-    &gt;
-      ♥ {optimisticLikes}
-    <span class="tag">&lt;/button&gt;</span>
-  );
-}`;
-
-const q6Pre = `<span class="cmt">// Layer 1: Server State — TanStack Query</span>
-<span class="kw">const</span> { data: user } = <span class="fn">useQuery</span>({
-  queryKey: [<span class="str">'user'</span>, userId],
-  queryFn: () =&gt; <span class="fn">fetchUser</span>(userId),
-  staleTime: <span class="num">5</span> * <span class="num">60</span> * <span class="num">1000</span>,   <span class="cmt">// 5 min cache</span>
-});
-
-<span class="cmt">// Layer 2: Global Client State — Zustand</span>
-<span class="kw">const</span> useUIStore = <span class="fn">create</span>&lt;<span class="tp">UIState</span>&gt;()((set) =&gt; ({
-  sidebarOpen: <span class="kw">false</span>,
-  toggleSidebar: () =&gt; set(s =&gt; ({ sidebarOpen: !s.sidebarOpen })),
-}));
-
-<span class="cmt">// Layer 3: Local — useState stays local</span>
-<span class="kw">const</span> [tab, setTab] = <span class="fn">useState</span>(<span class="str">"overview"</span>);`;
-
-const q7Pre = `<span class="cmt">// ❌ New object reference every render → all consumers re-render</span>
-<span class="tag">&lt;Ctx.Provider</span> <span class="attr">value</span>={{ user, logout }} /&gt;
-
-<span class="cmt">// ✅ Memoize context value</span>
-<span class="kw">const</span> value = <span class="fn">useMemo</span>(
-  () =&gt; ({ user, logout }),
-  [user, logout]    <span class="cmt">// only changes when user or logout changes</span>
-);
-<span class="tag">&lt;Ctx.Provider</span> <span class="attr">value</span>={value} /&gt;
-
-<span class="cmt">// ✅ Or split contexts by update frequency</span>
-<span class="tag">&lt;UserCtx.Provider</span> <span class="attr">value</span>={user}&gt;
-  <span class="tag">&lt;AuthActionsCtx.Provider</span> <span class="attr">value</span>={stableActions}&gt;
-    {children}
-  <span class="tag">&lt;/AuthActionsCtx.Provider&gt;</span>
-<span class="tag">&lt;/UserCtx.Provider&gt;</span>`;
-
-const q8Pre = `<span class="kw">import</span> dynamic <span class="kw">from</span> <span class="str">'next/dynamic'</span>;
-
-<span class="cmt">// Deferred: only loads when rendered</span>
-<span class="kw">const</span> RichEditor = <span class="fn">dynamic</span>(
-  () =&gt; <span class="kw">import</span>(<span class="str">'@/components/RichEditor'</span>),
-  { loading: () =&gt; <span class="tag">&lt;EditorSkeleton</span> /&gt;, ssr: <span class="kw">false</span> }
-);
-
-<span class="cmt">// next.config.js — tree-shake large icon libs</span>
-<span class="kw">const</span> config = {
-  experimental: {
-    optimizePackageImports: [<span class="str">'lucide-react'</span>, <span class="str">'@heroicons/react'</span>]
-  }
-};`;
-
-const q10Pre = `<span class="kw">const</span> TabsCtx = <span class="fn">createContext</span>&lt;<span class="tp">TabsContextType</span>&gt;(<span class="kw">null</span>!);
-
-<span class="kw">function</span> <span class="fn">Tabs</span>({ children, defaultTab }: <span class="tp">TabsProps</span>) {
-  <span class="kw">const</span> [active, setActive] = <span class="fn">useState</span>(defaultTab);
-  <span class="kw">return</span> <span class="tag">&lt;TabsCtx.Provider</span> <span class="attr">value</span>={{ active, setActive }}&gt;{children}<span class="tag">&lt;/TabsCtx.Provider&gt;</span>;
-}
-
-<span class="fn">Tabs</span>.Tab = <span class="kw">function</span> <span class="fn">Tab</span>({ id, children }: <span class="tp">TabProps</span>) {
-  <span class="kw">const</span> { active, setActive } = <span class="fn">useContext</span>(TabsCtx);
-  <span class="kw">return</span> <span class="tag">&lt;button</span> <span class="attr">aria-selected</span>={active === id} <span class="attr">onClick</span>={() =&gt; <span class="fn">setActive</span>(id)}&gt;{children}<span class="tag">&lt;/button&gt;</span>;
+/* ═══════════════════════════════════════════════════════════
+   PAGE DATA — 100% pure JSON, zero HTML strings
+   ═══════════════════════════════════════════════════════════ */
+const PAGE_DATA = {
+  cover: {
+    badge: "Advanced \u00b7 System Design",
+    titleLine1: "React &",
+    titleAccent: "Next.js",
+    titleLine2: "Deep Dive",
+    sub: "// 20 advanced interview questions",
+    desc: "Architecture, internals, performance, and production system design \u2014 the questions that separate senior engineers from mid-level ones.",
+    stats: [
+      { value: "20", label: "Questions" },
+      { value: "12", label: "React Core" },
+      { value: "8", label: "Next.js" },
+    ],
+  },
+  toc: [
+    { num: "01", title: "React Fiber & Concurrent Rendering", tag: "react", tagType: "react" },
+    { num: "02", title: "Reconciliation & the Diffing Algorithm", tag: "react", tagType: "react" },
+    { num: "03", title: "Transitions & useDeferredValue", tag: "react", tagType: "react" },
+    { num: "04", title: "Suspense & Streaming SSR", tag: "react", tagType: "react" },
+    { num: "05", title: "React 19 \u2014 useOptimistic & useActionState", tag: "react", tagType: "react" },
+    { num: "06", title: "State Management Architecture", tag: "system", tagType: "sys" },
+    { num: "07", title: "Render & Re-render Optimization", tag: "perf", tagType: "perf" },
+    { num: "08", title: "Code Splitting & Bundle Strategy", tag: "perf", tagType: "perf" },
+    { num: "09", title: "React Query / Server State Management", tag: "react", tagType: "react" },
+    { num: "10", title: "Compound Components & Advanced Patterns", tag: "react", tagType: "react" },
+    { num: "11", title: "Next.js Middleware & Edge Runtime", tag: "next", tagType: "next" },
+    { num: "12", title: "Caching Layers in Next.js", tag: "next", tagType: "next" },
+    { num: "13", title: "Server Actions & Mutations", tag: "next", tagType: "next" },
+    { num: "14", title: "Route Handlers & API Layer Design", tag: "next", tagType: "next" },
+    { num: "15", title: "Parallel & Intercepting Routes", tag: "next", tagType: "next" },
+    { num: "16", title: "Authentication Patterns in Next.js", tag: "next", tagType: "next" },
+    { num: "17", title: "Monorepo & Micro-frontend Architecture", tag: "system", tagType: "sys" },
+    { num: "18", title: "Real-time UI: WebSockets & SSE", tag: "system", tagType: "sys" },
+    { num: "19", title: "Designing a Component Library", tag: "system", tagType: "sys" },
+    { num: "20", title: "Observability & Error Tracking", tag: "system", tagType: "sys" },
+  ],
+  categories: [
+    { startQ: 1, range: "01 \u2013 05", title: "React Internals & Concurrent Features", tagType: "react", tagLabel: "react core" },
+    { startQ: 6, range: "06 \u2013 10", title: "Architecture & Performance Patterns", tagType: "sys", tagLabel: "system design" },
+    { startQ: 11, range: "11 \u2013 16", title: "Next.js Deep Internals", tagType: "next", tagLabel: "next.js" },
+    { startQ: 17, range: "17 \u2013 20", title: "Production System Design", tagType: "sys", tagLabel: "system design" },
+  ],
+  questions: [
+    // ── Q1 ──
+    {
+      id: 1,
+      question: ["What is the React Fiber architecture, and why was it a fundamental rewrite of the original reconciler?"],
+      answer: [
+        "React Fiber, introduced in React 16, replaced the original stack-based reconciler with a linked-list data structure where each component instance maps to a \u201cfiber\u201d node containing its type, props, state, effect list, and pointers to its child, sibling, and parent fibers. The critical problem with the original reconciler was that the diffing of a large component tree was a single synchronous, uninterruptible call stack traversal \u2014 on slow devices, this would block the main thread and drop frames. Fiber breaks that traversal into small units of work that can be paused, resumed, aborted, and prioritized using a scheduler that integrates with the browser\u2019s ",
+        { c: "requestIdleCallback" },
+        " API. React maintains two fiber trees simultaneously \u2014 the current tree (what\u2019s on screen) and the work-in-progress tree (what\u2019s being computed) \u2014 committing the new tree atomically only when all work is complete, a technique called double buffering. This architecture is what enables all of Concurrent Mode\u2019s features: time-slicing, Suspense, transitions, and streaming SSR.",
+      ],
+      tag: "internals",
+      tagType: "react",
+      code: {
+        file: "fiber-node.ts",
+        lang: "typescript",
+        lines: [
+          [["cmt", "// Simplified Fiber node shape"]],
+          [["kw", "interface"], " ", ["tp", "FiberNode"], " {"],
+          ["  tag:           ", ["tp", "WorkTag"], ";        ", ["cmt", "// FunctionComponent, HostComponent, etc."]],
+          ["  type:          ", ["tp", "any"], ";            ", ["cmt", "// e.g. 'div' | MyComponent"]],
+          ["  stateNode:     ", ["tp", "any"], ";            ", ["cmt", "// DOM node or class instance"]],
+          ["  pendingProps:  ", ["tp", "Props"], ";"],
+          ["  memoizedProps: ", ["tp", "Props"], ";"],
+          ["  memoizedState: ", ["tp", "Hook"], " | ", ["kw", "null"], ";   ", ["cmt", "// hook linked list for function components"]],
+          ["  child:         ", ["tp", "FiberNode"], " | ", ["kw", "null"], ";"],
+          ["  sibling:       ", ["tp", "FiberNode"], " | ", ["kw", "null"], ";"],
+          ["  return:        ", ["tp", "FiberNode"], " | ", ["kw", "null"], "; ", ["cmt", "// parent"]],
+          ["  alternate:     ", ["tp", "FiberNode"], " | ", ["kw", "null"], "; ", ["cmt", "// double buffer pair"]],
+          ["  lanes:         ", ["tp", "Lanes"], ";           ", ["cmt", "// scheduled priority bitmask"]],
+          ["  flags:         ", ["tp", "Flags"], ";           ", ["cmt", "// Placement | Update | Deletion"]],
+          ["}"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q2 ──
+    {
+      id: 2,
+      question: ["How does React\u2019s reconciliation algorithm work, and what are the assumptions it makes to achieve O(n) complexity?"],
+      answer: [
+        "A naive tree diffing algorithm comparing two arbitrary trees has O(n\u00b3) time complexity, which is prohibitive for UI trees. React\u2019s reconciler achieves O(n) by making two heuristic assumptions: first, elements of different types produce entirely different trees, so React tears down the old tree and builds a new one from scratch when the root element type changes rather than diffing children. Second, developers signal element identity across renders using the ",
+        { c: "key" },
+        " prop \u2014 without a key, React matches elements by position, which breaks on reordering; with a stable key, React can track which item moved, was added, or was removed in a list efficiently. The algorithm walks the tree level-by-level (breadth-first), comparing each fiber by type: same type means update in place (reconcile props), different type means unmount and remount. Understanding this is critical for performance \u2014 placing components conditionally can cause expensive unmount/remount cycles instead of cheap in-place updates if the element type or key position changes.",
+      ],
+      tag: "internals",
+      tagType: "react",
+      code: {
+        file: "reconciliation-pitfall.tsx",
+        lang: "tsx",
+        lines: [
+          [["cmt", "// \u274c BAD: type changes \u2192 full unmount/remount every toggle"]],
+          ["{isAdmin ? ", ["tag", "<AdminPanel"], " /> : ", ["tag", "<UserPanel"], " />}"],
+          [""],
+          [["cmt", "// \u2705 GOOD: same type, only props change \u2192 in-place update"]],
+          [["tag", "<Panel"], " ", ["attr", "variant"], "={isAdmin ? ", ["str", "\"admin\""], " : ", ["str", "\"user\""], "} />"],
+          [""],
+          [["cmt", "// \u274c BAD: index key breaks reconciliation on sort/filter"]],
+          ["items.", ["fn", "map"], "((item, i) => ", ["tag", "<Row"], " ", ["attr", "key"], "={i} {...item} />)"],
+          [""],
+          [["cmt", "// \u2705 GOOD: stable identity key"]],
+          ["items.", ["fn", "map"], "(item => ", ["tag", "<Row"], " ", ["attr", "key"], "={item.id} {...item} />)"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q3 ──
+    {
+      id: 3,
+      question: [
+        "What are React Transitions (",
+        { c: "useTransition" },
+        " and ",
+        { c: "startTransition" },
+        "), and how do they differ from ",
+        { c: "useDeferredValue" },
+        "?",
+      ],
+      answer: [
+        { c: "startTransition" },
+        " marks a state update as non-urgent, telling React\u2019s scheduler that it can be interrupted by higher-priority updates like user input. This is used to keep the UI responsive during expensive state transitions \u2014 for example, filtering a large dataset where you want the input to feel instant while the list update can lag slightly. ",
+        { c: "useTransition" },
+        " is the hook version that also returns an ",
+        { c: "isPending" },
+        " boolean, allowing you to show a loading indicator while the transition is in progress without blocking the current UI. ",
+        { c: "useDeferredValue" },
+        " is semantically different: instead of wrapping a state setter, you wrap a derived value, and React may render the component with the old deferred value while the new value is still being calculated \u2014 useful when you receive props you can\u2019t wrap in ",
+        { c: "startTransition" },
+        ". A key rule: transitions work only with React state and state-derived renders, not with native DOM input values, so the controlled input\u2019s state update must remain urgent while only the expensive downstream computation is deferred.",
+      ],
+      tag: "concurrent",
+      tagType: "react",
+      code: {
+        file: "search-with-transition.tsx",
+        lang: "tsx",
+        lines: [
+          [["kw", "function"], " ", ["fn", "Search"], "() {"],
+          ["  ", ["kw", "const"], " [query, setQuery] = ", ["fn", "useState"], "(", ["str", "\"\""], ");"],
+          ["  ", ["kw", "const"], " [results, setResults] = ", ["fn", "useState"], "([]);"],
+          ["  ", ["kw", "const"], " [isPending, startTransition] = ", ["fn", "useTransition"], "();"],
+          [""],
+          ["  ", ["kw", "const"], " ", ["fn", "handleChange"], " = (e: ", ["tp", "ChangeEvent<HTMLInputElement>"], ") => {"],
+          ["    setQuery(e.target.value);              ", ["cmt", "// urgent \u2014 keep input snappy"]],
+          ["    ", ["fn", "startTransition"], "(() => {"],
+          ["      setResults(", ["fn", "heavyFilter"], "(e.target.value)); ", ["cmt", "// non-urgent"]],
+          ["    });"],
+          ["  };"],
+          [""],
+          ["  ", ["kw", "return"], " ("],
+          ["    ", ["tag", "<>"]],
+          ["      ", ["tag", "<input"], " ", ["attr", "value"], "={query} ", ["attr", "onChange"], "={handleChange} />"],
+          ["      {isPending && ", ["tag", "<Spinner"], " />}"],
+          ["      ", ["tag", "<ResultList"], " ", ["attr", "items"], "={results} />"],
+          ["    ", ["tag", "</>"]],
+          ["  );"],
+          ["}"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q4 ──
+    {
+      id: 4,
+      question: ["How does React Suspense work at a deep level, and what does Streaming SSR actually mean in Next.js?"],
+      answer: [
+        "Suspense works by having a child component \u201cthrow\u201d a Promise during rendering \u2014 a contract that React\u2019s concurrent renderer understands. React catches the thrown Promise, renders the nearest ",
+        { c: "<Suspense>" },
+        " boundary\u2019s fallback, and subscribes to the Promise; when it resolves, React re-renders the subtree. This is how ",
+        { c: "React.lazy" },
+        " enables code splitting and how data-fetching frameworks like Relay integrate. In Next.js, Streaming SSR extends this to the server: instead of waiting for all server-side data fetching to finish before sending any HTML (the traditional SSR waterfall), Next.js streams the HTML shell immediately and sends each Suspense boundary\u2019s content as its data resolves, via HTTP chunked transfer encoding. The browser progressively renders each chunk as it arrives, dramatically reducing Time to First Byte (TTFB) and Time to Interactive (TTI) for data-heavy pages. This is powered by React\u2019s ",
+        { c: "renderToPipeableStream" },
+        " (Node.js) and ",
+        { c: "renderToReadableStream" },
+        " (Edge) APIs.",
+      ],
+      tag: "concurrent",
+      tagType: "react",
+      code: {
+        file: "app/dashboard/page.tsx",
+        lang: "tsx",
+        lines: [
+          [["cmt", "// HTML shell renders instantly; each boundary streams in"]],
+          [["kw", "export default function"], " ", ["fn", "Dashboard"], "() {"],
+          ["  ", ["kw", "return"], " ("],
+          ["    ", ["tag", "<main>"]],
+          ["      ", ["tag", "<Header"], " />                     {", ["cmt", "/* static \u2014 renders immediately */"], "}"],
+          ["      ", ["tag", "<Suspense"], " ", ["attr", "fallback"], "=", ["str", "<MetricsSkeleton />"], ">"],
+          ["        ", ["tag", "<MetricsPanel"], " />              {", ["cmt", "/* streams when DB query resolves */"], "}"],
+          ["      ", ["tag", "</Suspense>"]],
+          ["      ", ["tag", "<Suspense"], " ", ["attr", "fallback"], "=", ["str", "<FeedSkeleton />"], ">"],
+          ["        ", ["tag", "<ActivityFeed"], " />              {", ["cmt", "/* streams independently */"], "}"],
+          ["      ", ["tag", "</Suspense>"]],
+          ["    ", ["tag", "</main>"]],
+          ["  );"],
+          ["}"],
+        ],
+      },
+      callout: {
+        type: "info",
+        content: [
+          { b: "Key insight:" },
+          " wrapping each slow data-fetching component in its own Suspense boundary means they stream in parallel \u2014 the slowest component no longer holds up everything else.",
+        ],
+      },
+    },
+    // ── Q5 ──
+    {
+      id: 5,
+      question: [
+        "What are ",
+        { c: "useOptimistic" },
+        " and ",
+        { c: "useActionState" },
+        " in React 19, and how do they change how you handle mutations?",
+      ],
+      answer: [
+        { c: "useOptimistic" },
+        " lets you immediately show an assumed-success state while an async mutation is in flight, rolling back automatically if the mutation fails. This eliminates the manual boilerplate of tracking optimistic state alongside real state \u2014 you pass it the real state and a reducer that computes the optimistic view, and React handles the reconciliation when the server responds. ",
+        { c: "useActionState" },
+        " (formerly ",
+        { c: "useFormState" },
+        ") is designed for form-based mutations \u2014 it wraps an async action function and returns the current state, the action handler, and an ",
+        { c: "isPending" },
+        " flag. Together with HTML ",
+        { c: "<form action={...}>" },
+        " (which React 19 natively supports), these hooks make form mutations fully declarative with no manual loading/error state management. Critically, these patterns work with both Server Actions and client-side async functions, and they integrate with React\u2019s transition system so the UI stays interactive during the mutation.",
+      ],
+      tag: "react 19",
+      tagType: "react",
+      code: {
+        file: "like-button.tsx",
+        lang: "tsx",
+        lines: [
+          [["str", "\"use client\""], ";"],
+          [""],
+          [["kw", "async function"], " ", ["fn", "toggleLike"], "(postId: ", ["tp", "string"], "): ", ["tp", "Promise<void>"], " {"],
+          ["  ", ["kw", "await"], " ", ["fn", "fetch"], "(", ["str", "`/api/posts/${postId}/like`"], ", { method: ", ["str", "\"POST\""], " });"],
+          ["}"],
+          [""],
+          [["kw", "function"], " ", ["fn", "LikeButton"], "({ postId, initialLikes }: ", ["tp", "Props"], ") {"],
+          ["  ", ["kw", "const"], " [likes, setLikes] = ", ["fn", "useState"], "(initialLikes);"],
+          ["  ", ["kw", "const"], " [optimisticLikes, addOptimistic] = ", ["fn", "useOptimistic"], "("],
+          ["    likes,"],
+          ["    (current, delta: ", ["tp", "number"], ") => current + delta"],
+          ["  );"],
+          [""],
+          ["  ", ["kw", "return"], " ("],
+          ["    ", ["tag", "<button"]],
+          ["      ", ["attr", "onClick"], "={", ["kw", "async"], " () => {"],
+          ["        ", ["fn", "addOptimistic"], "(", ["num", "1"], ");          ", ["cmt", "// instant UI update"]],
+          ["        ", ["kw", "await"], " ", ["fn", "toggleLike"], "(postId); ", ["cmt", "// real mutation"]],
+          ["        ", ["fn", "setLikes"], "(l => l + ", ["num", "1"], ");    ", ["cmt", "// confirm real state"]],
+          ["      }}"],
+          ["    >"],
+          ["      \u2665 {optimisticLikes}"],
+          ["    ", ["tag", "</button>"]],
+          ["  );"],
+          ["}"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q6 ──
+    {
+      id: 6,
+      question: ["How do you choose between local state, Context, Zustand, and a server-state library like TanStack Query? Design the state layer for a large app."],
+      answer: [
+        "The first distinction to make is between server state (remote data that lives on a server and must be fetched, cached, and synchronized) and client state (UI state that lives entirely in the browser, like modal open/closed or a selected tab). Server state should be managed by a dedicated library like TanStack Query or SWR \u2014 they handle caching, background revalidation, deduplication, optimistic updates, and race conditions in ways that ",
+        { c: "useEffect" },
+        "-based manual fetching never will. Client state should start as local component state and only be lifted or globalized when multiple unrelated components genuinely need it. For shared client state, React Context is sufficient for low-frequency updates like theme or auth user, but it is not optimized for high-frequency updates because all consumers re-render on any change. For more complex or high-frequency shared client state, a fine-grained store like Zustand or Jotai is appropriate \u2014 they use subscriptions that re-render only the components that read the changed slice. A mature large-scale app typically uses TanStack Query for all server state, Zustand for shared client state, and local ",
+        { c: "useState" },
+        "/",
+        { c: "useReducer" },
+        " for everything else.",
+      ],
+      tag: "architecture",
+      tagType: "sys",
+      code: {
+        file: "state-architecture.ts",
+        lang: "typescript",
+        lines: [
+          [["cmt", "// Layer 1: Server State \u2014 TanStack Query"]],
+          [["kw", "const"], " { data: user } = ", ["fn", "useQuery"], "({"],
+          ["  queryKey: [", ["str", "'user'"], ", userId],"],
+          ["  queryFn: () => ", ["fn", "fetchUser"], "(userId),"],
+          ["  staleTime: ", ["num", "5"], " * ", ["num", "60"], " * ", ["num", "1000"], ",   ", ["cmt", "// 5 min cache"]],
+          ["});"],
+          [""],
+          [["cmt", "// Layer 2: Global Client State \u2014 Zustand"]],
+          [["kw", "const"], " useUIStore = ", ["fn", "create"], "<", ["tp", "UIState"], ">()((set) => ({"],
+          ["  sidebarOpen: ", ["kw", "false"], ","],
+          ["  toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),"],
+          ["}));"],
+          [""],
+          [["cmt", "// Layer 3: Local \u2014 useState stays local"]],
+          [["kw", "const"], " [tab, setTab] = ", ["fn", "useState"], "(", ["str", "\"overview\""], ");"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q7 ──
+    {
+      id: 7,
+      question: ["Walk through a systematic approach to diagnosing and fixing excessive re-renders in a React application."],
+      answer: [
+        "The first tool is React DevTools Profiler \u2014 record an interaction, then inspect which components re-rendered and why (it shows \u201crendered because props changed\u201d, \u201crendered because parent rendered\u201d, etc.). The most common cause of wasted renders is an unstable reference passed as a prop: a new object or array literal ",
+        { c: "{}" },
+        " / ",
+        { c: "[]" },
+        " or an inline function created during a parent\u2019s render has a new identity on every render, defeating ",
+        { c: "React.memo" },
+        "\u2019s shallow comparison. Fix these with ",
+        { c: "useMemo" },
+        " for objects/arrays and ",
+        { c: "useCallback" },
+        " for functions \u2014 but only after profiling confirms the component is expensive to re-render. The second common cause is Context value instability: if you pass an inline object to a Provider\u2019s ",
+        { c: "value" },
+        " prop, all consumers re-render on every provider re-render regardless of whether relevant data changed; fix by memoizing the context value with ",
+        { c: "useMemo" },
+        " or splitting into separate contexts for different update frequencies. For lists, ensure keys are stable and use virtualization (TanStack Virtual) once items exceed a few hundred. Finally, state colocation \u2014 moving state down to the leaf component that actually uses it \u2014 is often the highest-leverage fix because it narrows the re-render blast radius without any memoization overhead.",
+      ],
+      tag: "performance",
+      tagType: "perf",
+      code: {
+        file: "stable-context.tsx",
+        lang: "tsx",
+        lines: [
+          [["cmt", "// \u274c New object reference every render \u2192 all consumers re-render"]],
+          [["tag", "<Ctx.Provider"], " ", ["attr", "value"], "={{ user, logout }} />"],
+          [""],
+          [["cmt", "// \u2705 Memoize context value"]],
+          [["kw", "const"], " value = ", ["fn", "useMemo"], "("],
+          ["  () => ({ user, logout }),"],
+          ["  [user, logout]    ", ["cmt", "// only changes when user or logout changes"]],
+          [");"],
+          [["tag", "<Ctx.Provider"], " ", ["attr", "value"], "={value} />"],
+          [""],
+          [["cmt", "// \u2705 Or split contexts by update frequency"]],
+          [["tag", "<UserCtx.Provider"], " ", ["attr", "value"], "={user}>"],
+          ["  ", ["tag", "<AuthActionsCtx.Provider"], " ", ["attr", "value"], "={stableActions}>"],
+          ["    {children}"],
+          ["  ", ["tag", "</AuthActionsCtx.Provider>"]],
+          [["tag", "</UserCtx.Provider>"]],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q8 ──
+    {
+      id: 8,
+      question: ["How does code splitting work in React and Next.js, and how do you design a bundle splitting strategy for a large application?"],
+      answer: [
+        "Webpack and Turbopack (Next.js\u2019s bundler) use dynamic ",
+        { c: "import()" },
+        " expressions as split points, emitting a separate chunk for each one that is only downloaded when needed. In React, ",
+        { c: "React.lazy(() => import('./Modal'))" },
+        " paired with ",
+        { c: "Suspense" },
+        " defers a component\u2019s chunk until the first render. Next.js handles route-level splitting automatically in both the Pages and App Router \u2014 each route segment gets its own JS bundle. The design decisions concern what to split beyond route boundaries: heavy third-party libraries that are not needed on the initial render (chart libraries, rich text editors, date pickers) are prime candidates for lazy loading. In the App Router, marking a component ",
+        { c: "\"use client\"" },
+        " already scopes it out of the server bundle; within client components, ",
+        { c: "dynamic(() => import(...), { ssr: false })" },
+        " prevents SSR for browser-only modules like D3 or Mapbox. You can analyze your bundles with ",
+        { c: "@next/bundle-analyzer" },
+        " to find unexpected large dependencies and duplication across chunks, then use ",
+        { c: "optimizePackageImports" },
+        " in ",
+        { c: "next.config.js" },
+        " to enable tree-shaking for libraries that don\u2019t support it natively.",
+      ],
+      tag: "performance",
+      tagType: "perf",
+      code: {
+        file: "dynamic-import.tsx",
+        lang: "tsx",
+        lines: [
+          [["kw", "import"], " dynamic ", ["kw", "from"], " ", ["str", "'next/dynamic'"], ";"],
+          [""],
+          [["cmt", "// Deferred: only loads when rendered"]],
+          [["kw", "const"], " RichEditor = ", ["fn", "dynamic"], "("],
+          ["  () => ", ["kw", "import"], "(", ["str", "'@/components/RichEditor'"], "),"],
+          ["  { loading: () => ", ["tag", "<EditorSkeleton"], " />, ssr: ", ["kw", "false"], " }"],
+          [");"],
+          [""],
+          [["cmt", "// next.config.js \u2014 tree-shake large icon libs"]],
+          [["kw", "const"], " config = {"],
+          ["  experimental: {"],
+          ["    optimizePackageImports: [", ["str", "'lucide-react'"], ", ", ["str", "'@heroicons/react'"], "]"],
+          ["  }"],
+          ["};"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q9 ──
+    {
+      id: 9,
+      question: ["How does TanStack Query manage server state, and how do you design cache invalidation and synchronization strategies?"],
+      answer: [
+        "TanStack Query (React Query) represents each piece of server state as a cache entry identified by a ",
+        { c: "queryKey" },
+        " array. When a query\u2019s data ages beyond ",
+        { c: "staleTime" },
+        ", it is marked stale and will be refetched in the background on the next mount, window focus, or network reconnect \u2014 the component is never left with a loading spinner, it renders stale data immediately while fresh data arrives. Mutations use ",
+        { c: "useMutation" },
+        " and their ",
+        { c: "onSuccess" },
+        " callback is the primary place for cache invalidation via ",
+        { c: "queryClient.invalidateQueries({ queryKey: [...] })" },
+        ", which marks matching entries stale and triggers background refetches. For instant UI feedback, optimistic updates can be implemented in ",
+        { c: "onMutate" },
+        " with a rollback in ",
+        { c: "onError" },
+        ". At scale, the key design decision is query key structure \u2014 using hierarchical keys like ",
+        { c: "['posts', { page, filter }]" },
+        " enables precise or broad invalidation: ",
+        { c: "['posts']" },
+        " as the invalidation key invalidates all post-related queries. In Next.js App Router, TanStack Query\u2019s ",
+        { c: "prefetchQuery" },
+        " and ",
+        { c: "HydrationBoundary" },
+        " allow you to prefetch on the server and hydrate on the client with zero loading state on first render.",
+      ],
+      tag: "server state",
+      tagType: "react",
+      code: null,
+      callout: null,
+    },
+    // ── Q10 ──
+    {
+      id: 10,
+      question: ["What are Compound Components and the Render Props pattern? When are they the right architectural choice?"],
+      answer: [
+        "The Compound Component pattern models a group of related components that share implicit state through Context \u2014 similar to how ",
+        { c: "<select>" },
+        " and ",
+        { c: "<option>" },
+        " work natively. The parent component owns and provides the shared state; child components consume it via context without any explicit prop-drilling. This gives consumers declarative, flexible composition \u2014 they can reorder, omit, or augment child components freely, unlike a monolithic component controlled by a single ",
+        { c: "config" },
+        " prop. The Render Props pattern passes a function as a prop (or as ",
+        { c: "children" },
+        ") and calls it with internal state, giving the consumer full control over rendering. In modern React, custom hooks largely replace render props since they extract the logic without influencing the component hierarchy, which is cleaner. Compound components remain the right choice when the API is inherently structural and compositional \u2014 ",
+        { c: "<Tabs>" },
+        ", ",
+        { c: "<Accordion>" },
+        ", ",
+        { c: "<Select>" },
+        ", ",
+        { c: "<Menu>" },
+        " \u2014 especially in component libraries where consumers must be able to slot in their own markup within the structure.",
+      ],
+      tag: "patterns",
+      tagType: "react",
+      code: {
+        file: "tabs-compound.tsx",
+        lang: "tsx",
+        lines: [
+          [["kw", "const"], " TabsCtx = ", ["fn", "createContext"], "<", ["tp", "TabsContextType"], ">(", ["kw", "null"], "!);"],
+          [""],
+          [["kw", "function"], " ", ["fn", "Tabs"], "({ children, defaultTab }: ", ["tp", "TabsProps"], ") {"],
+          ["  ", ["kw", "const"], " [active, setActive] = ", ["fn", "useState"], "(defaultTab);"],
+          ["  ", ["kw", "return"], " ", ["tag", "<TabsCtx.Provider"], " ", ["attr", "value"], "={{ active, setActive }}>{children}", ["tag", "</TabsCtx.Provider>"], ";"],
+          ["}"],
+          [""],
+          [["fn", "Tabs"], ".Tab = ", ["kw", "function"], " ", ["fn", "Tab"], "({ id, children }: ", ["tp", "TabProps"], ") {"],
+          ["  ", ["kw", "const"], " { active, setActive } = ", ["fn", "useContext"], "(TabsCtx);"],
+          ["  ", ["kw", "return"], " ", ["tag", "<button"], " ", ["attr", "aria-selected"], "={active === id} ", ["attr", "onClick"], "={() => ", ["fn", "setActive"], "(id)}>{children}", ["tag", "</button>"], ";"],
+          ["};"],
+          [""],
+          [["fn", "Tabs"], ".Panel = ", ["kw", "function"], " ", ["fn", "Panel"], "({ id, children }: ", ["tp", "PanelProps"], ") {"],
+          ["  ", ["kw", "const"], " { active } = ", ["fn", "useContext"], "(TabsCtx);"],
+          ["  ", ["kw", "return"], " active === id ? ", ["tag", "<>"], "{children}", ["tag", "</>"], " : ", ["kw", "null"], ";"],
+          ["};"],
+          [""],
+          [["cmt", "// Usage \u2014 consumer controls composition"]],
+          [["tag", "<Tabs"], " ", ["attr", "defaultTab"], "=", ["str", "\"overview\""], ">"],
+          ["  ", ["tag", "<Tabs.Tab"], " ", ["attr", "id"], "=", ["str", "\"overview\""], ">Overview", ["tag", "</Tabs.Tab>"]],
+          ["  ", ["tag", "<Tabs.Panel"], " ", ["attr", "id"], "=", ["str", "\"overview\""], ">", ["tag", "<OverviewContent"], " />", ["tag", "</Tabs.Panel>"]],
+          [["tag", "</Tabs>"]],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q11 ──
+    {
+      id: 11,
+      question: ["What is Next.js Middleware, and how does it differ from running code in a Route Handler or a Server Component?"],
+      answer: [
+        "Middleware runs on the Edge Runtime at the CDN layer before the request reaches your application \u2014 before any route matching, Server Components, or Route Handlers execute. It receives a ",
+        { c: "NextRequest" },
+        " and must return a ",
+        { c: "NextResponse" },
+        " (rewrite, redirect, or pass through), making it the right place for logic that must run on every request with minimal latency: auth token validation, A/B test routing, geolocation-based redirects, and bot protection. Because it runs on the Edge Runtime, it has access only to the Web Fetch API and a constrained runtime \u2014 it cannot use Node.js APIs like ",
+        { c: "fs" },
+        ", native database drivers, or most npm packages. A Route Handler (",
+        { c: "route.ts" },
+        ") runs in the full Node.js environment and is appropriate for full API endpoints with database access. A Server Component runs during the render phase and is appropriate for fetching data to hydrate HTML. A common pattern is to use Middleware only for fast, stateless routing decisions (verify JWT signature against a secret) and push any database lookups into Server Components or Route Handlers.",
+      ],
+      tag: "edge",
+      tagType: "next",
+      code: {
+        file: "middleware.ts",
+        lang: "typescript",
+        lines: [
+          [["kw", "import"], " { NextRequest, NextResponse } ", ["kw", "from"], " ", ["str", "'next/server'"], ";"],
+          [["kw", "import"], " { verifyToken } ", ["kw", "from"], " ", ["str", "'@/lib/jwt-edge'"], "; ", ["cmt", "// Web Crypto only"]],
+          [""],
+          [["kw", "export async function"], " ", ["fn", "middleware"], "(req: ", ["tp", "NextRequest"], ") {"],
+          ["  ", ["kw", "const"], " token = req.cookies.", ["fn", "get"], "(", ["str", "'session'"], ")?.value;"],
+          ["  ", ["kw", "const"], " valid = token && ", ["kw", "await"], " ", ["fn", "verifyToken"], "(token);"],
+          [""],
+          ["  ", ["kw", "if"], " (!valid && req.nextUrl.pathname.", ["fn", "startsWith"], "(", ["str", "'/dashboard'"], ")) {"],
+          ["    ", ["kw", "return"], " NextResponse.", ["fn", "redirect"], "(", ["kw", "new"], " ", ["fn", "URL"], "(", ["str", "'/login'"], ", req.url));"],
+          ["  }"],
+          ["  ", ["kw", "return"], " NextResponse.", ["fn", "next"], "();"],
+          ["}"],
+          [""],
+          [["kw", "export const"], " config = {"],
+          ["  matcher: [", ["str", "'/dashboard/:path*'"], ", ", ["str", "'/api/protected/:path*'"], "],"],
+          ["};"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q12 ──
+    {
+      id: 12,
+      question: ["Explain the four caching layers in Next.js App Router and how they interact with each other."],
+      answer: [
+        "Next.js App Router has four distinct caching mechanisms that operate at different layers. The Request Memoization layer deduplicates identical ",
+        { c: "fetch()" },
+        " calls made during a single render pass on the server \u2014 if two Server Components independently call the same API endpoint, only one network request is made; this is scoped to a single request lifecycle and is automatic. The Data Cache is a persistent server-side HTTP cache that stores ",
+        { c: "fetch" },
+        " responses across requests and deployments, controlled by ",
+        { c: "{ cache: 'force-cache' }" },
+        " (default) or ",
+        { c: "{ next: { revalidate: N } }" },
+        " for time-based ISR; it persists until explicitly revalidated via ",
+        { c: "revalidatePath()" },
+        " or ",
+        { c: "revalidateTag()" },
+        ". The Full Route Cache stores the rendered HTML and RSC payload for statically generated routes at build time; dynamic routes bypass it. The Router Cache is a client-side in-memory cache of visited route segments that allows instant back/forward navigation without re-fetching from the server; it uses prefetched route data from ",
+        { c: "<Link>" },
+        " components. A common gotcha is that ",
+        { c: "revalidatePath()" },
+        " only clears the Data Cache and Full Route Cache on the server \u2014 users who have the old route in their Router Cache still see stale UI until they hard-refresh or the cache TTL expires.",
+      ],
+      tag: "caching",
+      tagType: "next",
+      code: null,
+      callout: {
+        type: "warn",
+        content: [
+          { b: "Production tip:" },
+          " use ",
+          { c: "revalidateTag()" },
+          " over ",
+          { c: "revalidatePath()" },
+          " for surgical cache busting \u2014 tag each fetch with a domain tag (",
+          { c: "{ next: { tags: ['posts'] } }" },
+          ") and invalidate the whole domain when a mutation occurs.",
+        ],
+      },
+    },
+    // ── Q13 ──
+    {
+      id: 13,
+      question: ["How do Next.js Server Actions work internally, and what security considerations must you design around?"],
+      answer: [
+        "Server Actions are async functions marked with ",
+        { c: "\"use server\"" },
+        " that are compiled by Next.js into POST endpoints with auto-generated, encrypted action IDs \u2014 when called from the client, React serializes the arguments, sends a POST request to the current URL with the action ID, and deserializes the return value. They can be called from form ",
+        { c: "action" },
+        " attributes (which works even before JS hydrates, providing progressive enhancement) or programmatically from event handlers. Internally, they participate in the React transition system, so the UI stays interactive and ",
+        { c: "useActionState" },
+        " captures pending/error state automatically. The critical security consideration is that Server Actions are public HTTP endpoints \u2014 any user can call any action by its ID with arbitrary arguments. This means you must validate every argument server-side (never trust client input), authorize the current session on every action (re-check permissions, never assume the call came from a legitimate UI flow), and be aware that action IDs are stable across builds if the function doesn\u2019t change. You should also rate-limit action endpoints and validate ",
+        { c: "Content-Type" },
+        " and ",
+        { c: "Origin" },
+        " headers to prevent CSRF from third-party sites.",
+      ],
+      tag: "mutations",
+      tagType: "next",
+      code: {
+        file: "actions/posts.ts",
+        lang: "typescript",
+        lines: [
+          [["str", "\"use server\""], ";"],
+          [""],
+          [["kw", "import"], " { z } ", ["kw", "from"], " ", ["str", "'zod'"], ";"],
+          [["kw", "import"], " { auth } ", ["kw", "from"], " ", ["str", "'@/lib/auth'"], ";"],
+          [""],
+          [["kw", "const"], " CreateSchema = z.", ["fn", "object"], "({"],
+          ["  title: z.", ["fn", "string"], "().", ["fn", "min"], "(", ["num", "1"], ").", ["fn", "max"], "(", ["num", "200"], "),"],
+          ["  body:  z.", ["fn", "string"], "().", ["fn", "min"], "(", ["num", "10"], "),"],
+          ["});"],
+          [""],
+          [["kw", "export async function"], " ", ["fn", "createPost"], "(formData: ", ["tp", "FormData"], ") {"],
+          ["  ", ["kw", "const"], " session = ", ["kw", "await"], " ", ["fn", "auth"], "();   ", ["cmt", "// \u2190 always re-authorize"]],
+          ["  ", ["kw", "if"], " (!session) ", ["kw", "throw new"], " ", ["fn", "Error"], "(", ["str", "\"Unauthorized\""], ");"],
+          [""],
+          ["  ", ["kw", "const"], " input = CreateSchema.", ["fn", "parse"], "({  ", ["cmt", "// \u2190 always validate"]],
+          ["    title: formData.", ["fn", "get"], "(", ["str", "\"title\""], "),"],
+          ["    body:  formData.", ["fn", "get"], "(", ["str", "\"body\""], "),"],
+          ["  });"],
+          [""],
+          ["  ", ["kw", "await"], " db.post.", ["fn", "create"], "({ data: { ...input, authorId: session.userId } });"],
+          ["  ", ["fn", "revalidateTag"], "(", ["str", "\"posts\""], ");"],
+          ["}"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q14 ──
+    {
+      id: 14,
+      question: ["When should you use Route Handlers in Next.js, and how do you design the API layer in an App Router project?"],
+      answer: [
+        "Route Handlers (",
+        { c: "app/api/.../route.ts" },
+        ") are Next.js\u2019s first-class API endpoints running in the full Node.js environment. In an App Router project, they are most necessary for four cases: serving external clients (mobile apps, third-party integrations) that can\u2019t use Server Actions; handling webhooks from external services; implementing OAuth callback flows; and serving streaming responses like SSE. For internal data fetching from your own Next.js UI, Server Components can call database/service functions directly \u2014 bypassing the HTTP layer entirely \u2014 which is more efficient and type-safe than going through a ",
+        { c: "/api" },
+        " Route Handler. Server Actions replace the \u201cPOST to an internal API endpoint\u201d pattern entirely. When you do design Route Handlers, structure them around resources and use standard HTTP semantics, apply authentication middleware consistently, validate request bodies with Zod, and return proper status codes. For complex APIs, consider co-locating route handlers alongside the feature they serve (",
+        { c: "app/(api)/posts/[id]/route.ts" },
+        ") rather than isolating them all in ",
+        { c: "app/api/" },
+        ".",
+      ],
+      tag: "api design",
+      tagType: "next",
+      code: null,
+      callout: null,
+    },
+    // ── Q15 ──
+    {
+      id: 15,
+      question: ["What are Parallel Routes and Intercepting Routes in Next.js, and what UI patterns do they enable?"],
+      answer: [
+        "Parallel Routes allow you to render multiple independent pages simultaneously within the same layout using named slots (directories prefixed with ",
+        { c: "@" },
+        "). The layout receives each slot as a separate prop and can render them side-by-side \u2014 this enables dashboards where different panels load and refresh independently with their own loading and error states, or split-view UIs. Each slot is a fully independent route segment with its own Suspense boundary. Intercepting Routes (directories prefixed with ",
+        { c: "(..)" },
+        " or ",
+        { c: "(...)" },
+        ") allow you to \u201cintercept\u201d a navigation to show a different UI in the current context while preserving the destination URL. The canonical example is an Instagram-style photo modal: clicking a photo in a feed intercepts the navigation to ",
+        { c: "/photos/[id]" },
+        " and renders it as a modal overlay on the feed page; navigating directly to ",
+        { c: "/photos/[id]" },
+        " or refreshing shows the full photo page. Together, Parallel and Intercepting Routes are combined to implement the \u201cmodal as a route\u201d pattern \u2014 the modal has a real URL, is shareable, supports back/forward navigation, and renders as a full page on direct access, all without complex client-side modal state management.",
+      ],
+      tag: "routing",
+      tagType: "next",
+      code: null,
+      callout: null,
+    },
+    // ── Q16 ──
+    {
+      id: 16,
+      question: ["Design a complete authentication system in Next.js App Router \u2014 covering session storage, protected routes, and role-based access control."],
+      answer: [
+        "A production auth system in Next.js App Router uses Auth.js (NextAuth v5) as the foundation, configured with appropriate providers (OAuth, credentials, magic link). Sessions are stored in encrypted, ",
+        { c: "HttpOnly" },
+        ", ",
+        { c: "Secure" },
+        " cookies using JWT or database sessions \u2014 JWT sessions are stateless and scale without a session store, but can\u2019t be invalidated instantly; database sessions support instant revocation at the cost of a DB read per request. Route protection is layered: Middleware handles the coarse-grained redirect (unauthenticated users \u2192 ",
+        { c: "/login" },
+        ") using only a fast cryptographic JWT check, keeping the edge fast. Server Components perform fine-grained authorization by calling ",
+        { c: "auth()" },
+        " to get the session and checking roles or permissions before rendering sensitive data. Server Actions must re-verify auth on every call since they\u2019re public endpoints. For RBAC, permissions should be stored on the session object (or derived from it) to avoid a DB round-trip on every check \u2014 but the authoritative role data must be re-read on any mutation that requires up-to-date permissions. Never implement access control in client components alone; they are not a security boundary.",
+      ],
+      tag: "auth",
+      tagType: "next",
+      code: {
+        file: "app/admin/page.tsx",
+        lang: "tsx",
+        lines: [
+          [["kw", "import"], " { auth } ", ["kw", "from"], " ", ["str", "'@/auth'"], ";"],
+          [["kw", "import"], " { redirect } ", ["kw", "from"], " ", ["str", "'next/navigation'"], ";"],
+          [""],
+          [["kw", "export default async function"], " ", ["fn", "AdminPage"], "() {"],
+          ["  ", ["kw", "const"], " session = ", ["kw", "await"], " ", ["fn", "auth"], "();"],
+          [""],
+          ["  ", ["kw", "if"], " (!session)             ", ["fn", "redirect"], "(", ["str", "'/login'"], ");"],
+          ["  ", ["kw", "if"], " (session.user.role !== ", ["str", "'admin'"], ") ", ["fn", "redirect"], "(", ["str", "'/403'"], ");"],
+          [""],
+          ["  ", ["cmt", "// Only admins reach here \u2014 safe to fetch sensitive data"]],
+          ["  ", ["kw", "const"], " data = ", ["kw", "await"], " ", ["fn", "fetchAdminData"], "();"],
+          ["  ", ["kw", "return"], " ", ["tag", "<AdminDashboard"], " ", ["attr", "data"], "={data} />;"],
+          ["}"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q17 ──
+    {
+      id: 17,
+      question: ["How would you architect a large React/Next.js application as a monorepo, and what are the tradeoffs vs. a micro-frontend approach?"],
+      answer: [
+        "A monorepo consolidates multiple packages (the Next.js app, a shared UI component library, shared utility functions, type definitions) into a single repository managed by a tool like Turborepo or Nx. The primary benefits are atomic commits across packages, shared TypeScript types without publishing, centralized dependency management, and a single CI pipeline with incremental task caching \u2014 Turborepo\u2019s build cache means only packages affected by a commit are rebuilt. The recommended structure separates ",
+        { c: "apps/" },
+        " (deployable applications) from ",
+        { c: "packages/" },
+        " (shared libraries), with each package having its own ",
+        { c: "package.json" },
+        " and TypeScript config. A micro-frontend architecture instead deploys each feature as an independently deployable app, stitched together at runtime via Module Federation or at the CDN via edge composition. Micro-frontends solve genuine organizational scale problems \u2014 multiple teams owning independent deployments \u2014 but introduce significant complexity: shared state between apps, routing coordination, duplicated dependencies increasing bundle size, and debugging across deployment boundaries. For most organizations, a monorepo is the right choice; micro-frontends should only be considered when independent deployability per team is a hard requirement.",
+      ],
+      tag: "architecture",
+      tagType: "sys",
+      code: null,
+      callout: null,
+    },
+    // ── Q18 ──
+    {
+      id: 18,
+      question: ["How do you implement real-time features in a Next.js application \u2014 comparing WebSockets, Server-Sent Events, and polling?"],
+      answer: [
+        "The right real-time primitive depends on communication directionality and infrastructure constraints. Server-Sent Events (SSE) are unidirectional (server \u2192 client) over a standard HTTP connection, easy to implement in Next.js Route Handlers with ",
+        { c: "ReadableStream" },
+        ", and automatically reconnect; they work through HTTP/2 multiplexing, proxies, and CDNs. SSE is the right choice for live notifications, activity feeds, and streaming AI responses. WebSockets are bidirectional and lower-latency, suited for collaborative editing, multiplayer features, and chat \u2014 but they require a persistent server connection which conflicts with serverless and Edge deployments; you typically need a dedicated WebSocket service (Ably, Pusher, Supabase Realtime, or a Node.js server). Polling (repeated ",
+        { c: "fetch" },
+        " on an interval) is the simplest implementation and appropriate when latency of 5\u201330 seconds is acceptable \u2014 it works everywhere but wastes bandwidth. In Next.js, integrate real-time subscriptions in a client-side custom hook and combine with TanStack Query\u2019s ",
+        { c: "queryClient.setQueryData()" },
+        " to merge real-time updates directly into the cache, keeping the rest of your data layer consistent.",
+      ],
+      tag: "real-time",
+      tagType: "sys",
+      code: {
+        file: "app/api/stream/route.ts",
+        lang: "typescript",
+        lines: [
+          [["kw", "export async function"], " ", ["fn", "GET"], "() {"],
+          ["  ", ["kw", "const"], " stream = ", ["kw", "new"], " ", ["tp", "ReadableStream"], "({"],
+          ["    ", ["kw", "async"], " ", ["fn", "start"], "(controller) {"],
+          ["      ", ["kw", "const"], " ", ["fn", "send"], " = (data: ", ["tp", "unknown"], ") =>"],
+          ["        controller.", ["fn", "enqueue"], "(", ["kw", "new"], " ", ["tp", "TextEncoder"], "().", ["fn", "encode"], "("],
+          ["          ", ["str", "`data: ${JSON.stringify(data)}\\n\\n`"]],
+          ["        ));"],
+          [""],
+          ["      ", ["kw", "const"], " unsub = db.", ["fn", "subscribe"], "(", ["str", "'events'"], ", ", ["fn", "send"], ");"],
+          ["      ", ["cmt", "// cleanup on disconnect not shown for brevity"]],
+          ["    },"],
+          ["  });"],
+          [""],
+          ["  ", ["kw", "return new"], " ", ["tp", "Response"], "(stream, {"],
+          ["    headers: {"],
+          ["      ", ["str", "'Content-Type'"], ": ", ["str", "'text/event-stream'"], ","],
+          ["      ", ["str", "'Cache-Control'"], ": ", ["str", "'no-cache'"], ","],
+          ["    },"],
+          ["  });"],
+          ["}"],
+        ],
+      },
+      callout: null,
+    },
+    // ── Q19 ──
+    {
+      id: 19,
+      question: ["How would you design and build a scalable React component library for use across multiple Next.js applications?"],
+      answer: [
+        "A production-grade component library has distinct concerns across API design, build configuration, and distribution. For API design, components should follow the Open/Closed principle \u2014 expose a polymorphic ",
+        { c: "as" },
+        " prop or use the Radix UI \u201casChild\u201d pattern to let consumers change the underlying element without forking the component, and forward refs everywhere so host apps can imperatively access DOM nodes. Build-wise, you need to output both ESM and CJS from tools like tsup or Rollup, with separate ",
+        { c: ".d.ts" },
+        " type declarations and a proper ",
+        { c: "exports" },
+        " map in ",
+        { c: "package.json" },
+        " for subpath imports. CSS-in-JS libraries that generate styles at runtime (Emotion, styled-components) create challenges in Next.js App Router Server Components; a CSS Modules or Tailwind approach is more compatible. For the token system, define design tokens as CSS custom properties so they cascade and are overridable without rebuilding the library. Version your components semantically, maintain a storybook for visual testing and documentation, and implement visual regression tests with Chromatic to catch unintended UI changes across component updates before they reach consumers.",
+      ],
+      tag: "design system",
+      tagType: "sys",
+      code: null,
+      callout: null,
+    },
+    // ── Q20 ──
+    {
+      id: 20,
+      question: ["How do you instrument a Next.js application for production observability \u2014 error tracking, performance monitoring, and logging?"],
+      answer: [
+        "Production observability covers three pillars: errors, performance metrics, and structured logs. For error tracking, Sentry is the standard \u2014 install ",
+        { c: "@sentry/nextjs" },
+        " and its wizard configures source map uploading and wraps both the client and server automatically; the ",
+        { c: "instrumentation.ts" },
+        " file (Next.js\u2019s official hook for server-side SDK initialization) is the correct place for server SDK setup. For performance, Next.js\u2019s built-in ",
+        { c: "useReportWebVitals" },
+        " hook sends LCP, INP, and CLS to any analytics endpoint; for deeper tracing, OpenTelemetry integration in ",
+        { c: "instrumentation.ts" },
+        " provides distributed traces across server components, route handlers, and database calls. Structured JSON logging on the server (using ",
+        { c: "pino" },
+        " or ",
+        { c: "winston" },
+        ") is essential for searchable logs in platforms like Datadog or Grafana Loki \u2014 always include request ID, route, user ID, and duration in every log entry. Client-side, the ",
+        { c: "web-vitals" },
+        " package provides exact metric values for real-user monitoring. Finally, Next.js\u2019s ",
+        { c: "experimental.instrumentationHook" },
+        " combined with OpenTelemetry lets you trace the entire request lifecycle from Middleware through Server Components to database calls in a single distributed trace, which is invaluable for diagnosing latency regressions in production.",
+      ],
+      tag: "observability",
+      tagType: "sys",
+      code: {
+        file: "instrumentation.ts",
+        lang: "typescript",
+        lines: [
+          [["kw", "export async function"], " ", ["fn", "register"], "() {"],
+          ["  ", ["kw", "if"], " (process.env.NEXT_RUNTIME === ", ["str", "'nodejs'"], ") {"],
+          ["    ", ["kw", "const"], " { ", ["fn", "init"], " } = ", ["kw", "await import"], "(", ["str", "'@sentry/nextjs'"], ");"],
+          ["    ", ["fn", "init"], "({"],
+          ["      dsn: process.env.SENTRY_DSN,"],
+          ["      tracesSampleRate: ", ["num", "0.1"], ",         ", ["cmt", "// 10% of transactions"]],
+          ["      profilesSampleRate: ", ["num", "0.1"], ","],
+          ["    });"],
+          [""],
+          ["    ", ["cmt", "// OpenTelemetry \u2014 full distributed tracing"]],
+          ["    ", ["kw", "const"], " { ", ["tp", "NodeSDK"], " } = ", ["kw", "await import"], "(", ["str", "'@opentelemetry/sdk-node'"], ");"],
+          ["    ", ["kw", "new"], " ", ["tp", "NodeSDK"], "({ ", ["cmt", "/* exporter config */"], " }).", ["fn", "start"], "();"],
+          ["  }"],
+          ["}"],
+        ],
+      },
+      callout: {
+        type: "good",
+        content: [
+          { b: "Best practice:" },
+          " always upload source maps to Sentry and add them to ",
+          { c: ".gitignore" },
+          " / ",
+          { c: ".vercelignore" },
+          " so stack traces in production show original TypeScript line numbers, not minified bundle offsets.",
+        ],
+      },
+    },
+  ] as Question[],
+  footer: {
+    logo: "React & Next.js",
+    desc: "// advanced interview preparation guide",
+    right: [
+      "20 questions \u00b7 Advanced & System Design",
+      "React 19 \u00b7 Next.js 15 \u00b7 App Router",
+    ],
+  },
 };
 
-<span class="fn">Tabs</span>.Panel = <span class="kw">function</span> <span class="fn">Panel</span>({ id, children }: <span class="tp">PanelProps</span>) {
-  <span class="kw">const</span> { active } = <span class="fn">useContext</span>(TabsCtx);
-  <span class="kw">return</span> active === id ? <span class="tag">&lt;&gt;</span>{children}<span class="tag">&lt;/&gt;</span> : <span class="kw">null</span>;
-};
-
-<span class="cmt">// Usage — consumer controls composition</span>
-<span class="tag">&lt;Tabs</span> <span class="attr">defaultTab</span>=<span class="str">"overview"</span>&gt;
-  <span class="tag">&lt;Tabs.Tab</span> <span class="attr">id</span>=<span class="str">"overview"</span>&gt;Overview<span class="tag">&lt;/Tabs.Tab&gt;</span>
-  <span class="tag">&lt;Tabs.Panel</span> <span class="attr">id</span>=<span class="str">"overview"</span>&gt;<span class="tag">&lt;OverviewContent</span> /&gt;<span class="tag">&lt;/Tabs.Panel&gt;</span>
-<span class="tag">&lt;/Tabs&gt;</span>`;
-
-const q11Pre = `<span class="kw">import</span> { NextRequest, NextResponse } <span class="kw">from</span> <span class="str">'next/server'</span>;
-<span class="kw">import</span> { verifyToken } <span class="kw">from</span> <span class="str">'@/lib/jwt-edge'</span>; <span class="cmt">// Web Crypto only</span>
-
-<span class="kw">export async function</span> <span class="fn">middleware</span>(req: <span class="tp">NextRequest</span>) {
-  <span class="kw">const</span> token = req.cookies.<span class="fn">get</span>(<span class="str">'session'</span>)?.value;
-  <span class="kw">const</span> valid = token &amp;&amp; <span class="kw">await</span> <span class="fn">verifyToken</span>(token);
-
-  <span class="kw">if</span> (!valid &amp;&amp; req.nextUrl.pathname.<span class="fn">startsWith</span>(<span class="str">'/dashboard'</span>)) {
-    <span class="kw">return</span> NextResponse.<span class="fn">redirect</span>(<span class="kw">new</span> <span class="fn">URL</span>(<span class="str">'/login'</span>, req.url));
-  }
-  <span class="kw">return</span> NextResponse.<span class="fn">next</span>();
+/* ═══════════════════════════════════════════════════════════
+   RENDERERS — pure JSON → React elements, zero dangerouslySetInnerHTML
+   ═══════════════════════════════════════════════════════════ */
+function renderSegs(segs: Seg[]) {
+  return segs.map((s, i) => {
+    if (typeof s === "string") return s;
+    if ("c" in s) return <code key={i} className="ic">{s.c}</code>;
+    if ("b" in s) return <strong key={i}>{s.b}</strong>;
+    return null;
+  });
 }
 
-<span class="kw">export const</span> config = {
-  matcher: [<span class="str">'/dashboard/:path*'</span>, <span class="str">'/api/protected/:path*'</span>],
-};`;
+function renderCode(lines: CodeTok[][]) {
+  return lines.map((line, li) => (
+    <Fragment key={li}>
+      {line.map((tok, ti) =>
+        typeof tok === "string" ? (
+          tok
+        ) : (
+          <span key={ti} className={tok[0]}>
+            {tok[1]}
+          </span>
+        )
+      )}
+      {li < lines.length - 1 && "\n"}
+    </Fragment>
+  ));
+}
 
-const q13Pre = `<span class="str">"use server"</span>;
-
-<span class="kw">import</span> { z } <span class="kw">from</span> <span class="str">'zod'</span>;
-<span class="kw">import</span> { auth } <span class="kw">from</span> <span class="str">'@/lib/auth'</span>;
-
-<span class="kw">const</span> CreateSchema = z.<span class="fn">object</span>({
-  title: z.<span class="fn">string</span>().<span class="fn">min</span>(<span class="num">1</span>).<span class="fn">max</span>(<span class="num">200</span>),
-  body:  z.<span class="fn">string</span>().<span class="fn">min</span>(<span class="num">10</span>),
-});
-
-<span class="kw">export async function</span> <span class="fn">createPost</span>(formData: <span class="tp">FormData</span>) {
-  <span class="kw">const</span> session = <span class="kw">await</span> <span class="fn">auth</span>();   <span class="cmt">// ← always re-authorize</span>
-  <span class="kw">if</span> (!session) <span class="kw">throw new</span> <span class="fn">Error</span>(<span class="str">"Unauthorized"</span>);
-
-  <span class="kw">const</span> input = CreateSchema.<span class="fn">parse</span>({  <span class="cmt">// ← always validate</span>
-    title: formData.<span class="fn">get</span>(<span class="str">"title"</span>),
-    body:  formData.<span class="fn">get</span>(<span class="str">"body"</span>),
-  });
-
-  <span class="kw">await</span> db.post.<span class="fn">create</span>({ data: { ...input, authorId: session.userId } });
-  <span class="fn">revalidateTag</span>(<span class="str">"posts"</span>);
-}`;
-
-const q16Pre = `<span class="kw">import</span> { auth } <span class="kw">from</span> <span class="str">'@/auth'</span>;
-<span class="kw">import</span> { redirect } <span class="kw">from</span> <span class="str">'next/navigation'</span>;
-
-<span class="kw">export default async function</span> <span class="fn">AdminPage</span>() {
-  <span class="kw">const</span> session = <span class="kw">await</span> <span class="fn">auth</span>();
-
-  <span class="kw">if</span> (!session)             <span class="fn">redirect</span>(<span class="str">'/login'</span>);
-  <span class="kw">if</span> (session.user.role !== <span class="str">'admin'</span>) <span class="fn">redirect</span>(<span class="str">'/403'</span>);
-
-  <span class="cmt">// Only admins reach here — safe to fetch sensitive data</span>
-  <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetchAdminData</span>();
-  <span class="kw">return</span> <span class="tag">&lt;AdminDashboard</span> <span class="attr">data</span>={data} /&gt;;
-}`;
-
-const q18Pre = `<span class="kw">export async function</span> <span class="fn">GET</span>() {
-  <span class="kw">const</span> stream = <span class="kw">new</span> <span class="tp">ReadableStream</span>({
-    <span class="kw">async</span> <span class="fn">start</span>(controller) {
-      <span class="kw">const</span> <span class="fn">send</span> = (data: <span class="tp">unknown</span>) =&gt;
-        controller.<span class="fn">enqueue</span>(<span class="kw">new</span> <span class="tp">TextEncoder</span>().<span class="fn">encode</span>(
-          <span class="str">\`data: \${JSON.stringify(data)}\\n\\n\`</span>
-        ));
-
-      <span class="kw">const</span> unsub = db.<span class="fn">subscribe</span>(<span class="str">'events'</span>, <span class="fn">send</span>);
-      <span class="cmt">// cleanup on disconnect not shown for brevity</span>
-    },
-  });
-
-  <span class="kw">return new</span> <span class="tp">Response</span>(stream, {
-    headers: {
-      <span class="str">'Content-Type'</span>: <span class="str">'text/event-stream'</span>,
-      <span class="str">'Cache-Control'</span>: <span class="str">'no-cache'</span>,
-    },
-  });
-}`;
-
-const q20Pre = `<span class="kw">export async function</span> <span class="fn">register</span>() {
-  <span class="kw">if</span> (process.env.NEXT_RUNTIME === <span class="str">'nodejs'</span>) {
-    <span class="kw">const</span> { <span class="fn">init</span> } = <span class="kw">await import</span>(<span class="str">'@sentry/nextjs'</span>);
-    <span class="fn">init</span>({
-      dsn: process.env.SENTRY_DSN,
-      tracesSampleRate: <span class="num">0.1</span>,         <span class="cmt">// 10% of transactions</span>
-      profilesSampleRate: <span class="num">0.1</span>,
-    });
-
-    <span class="cmt">// OpenTelemetry — full distributed tracing</span>
-    <span class="kw">const</span> { <span class="tp">NodeSDK</span> } = <span class="kw">await import</span>(<span class="str">'@opentelemetry/sdk-node'</span>);
-    <span class="kw">new</span> <span class="tp">NodeSDK</span>({ <span class="cmt">/* exporter config */</span> }).<span class="fn">start</span>();
-  }
-}`;
-
+/* ═══════════════════════════════════════════════════════════
+   COMPONENT — renders PAGE_DATA using Tailwind CSS
+   ═══════════════════════════════════════════════════════════ */
 export default function AdvancedReactNextjsPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <a href="/" className="adv-back">
-        ← Back
-      </a>
 
-      {/* ═══════════════ COVER ═══════════════ */}
-      <div className="cover">
-        <div className="cover-grid">
-          <div className="cover-left">
-            <div className="cover-badge">Advanced · System Design</div>
-            <h1>
-              React &amp;
-              <br />
-              <em>Next.js</em>
-              <br />
-              Deep Dive
-            </h1>
-            <p className="cover-sub">// 20 advanced interview questions</p>
-            <p className="cover-desc">
-              Architecture, internals, performance, and production system design
-              — the questions that separate senior engineers from mid-level
-              ones.
-            </p>
-            <div className="cover-stats">
-              <div className="stat">
-                <span className="stat-value">20</span>
-                <span className="stat-label">Questions</span>
-              </div>
-              <div className="stat">
-                <span className="stat-value">12</span>
-                <span className="stat-label">React Core</span>
-              </div>
-              <div className="stat">
-                <span className="stat-value">8</span>
-                <span className="stat-label">Next.js</span>
-              </div>
-            </div>
-          </div>
-          <div className="cover-right">
-            <div className="cover-code-preview">
-              <div className="code-win">
-                <div className="code-win-bar">
-                  <div className="dot dot-r"></div>
-                  <div className="dot dot-y"></div>
-                  <div className="dot dot-g"></div>
-                  <span className="code-win-title">fiber-reconciler.ts</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: coverPre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="cover-bottom">
-          <div className="cover-bottom-item">
-            stack <span>React 19 · Next.js 15</span>
-          </div>
-          <div className="cover-bottom-item">
-            renderer <span>Concurrent Mode</span>
-          </div>
-          <div className="cover-bottom-item">
-            topics <span>Internals · Architecture · Production</span>
-          </div>
-        </div>
-      </div>
+      <div className="ff-body min-h-screen bg-background text-foreground font-light leading-[1.8] text-[14.5px]">
 
-      {/* ═══════════════ TOC ═══════════════ */}
-      <div className="toc-wrap">
-        <div className="toc-header">
-          <h2>// index</h2>
-          <span className="toc-count">20 questions across 4 domains</span>
+        {/* ── COVER (simple, centered) ── */}
+        <div className="flex flex-col items-center justify-center text-center py-16 px-6 max-md:py-10 border-b border-(--border-default)">
+          <div className="ff-mono text-[11px] tracking-[0.08em] uppercase text-[--tag-sys-text] border border-[--tag-sys-border] px-3 py-1 mb-8 inline-flex items-center gap-2">
+            <span className="text-[8px]">&#9654;</span>
+            {PAGE_DATA.cover.badge}
+          </div>
+          <h1 className="ff-display text-[clamp(36px,5.5vw,64px)] font-black leading-[1.05] tracking-tight text-foreground mb-2">
+            {PAGE_DATA.cover.titleLine1}
+            <br />
+            <em className="italic text-(--accent)">{PAGE_DATA.cover.titleAccent}</em>
+            <br />
+            {PAGE_DATA.cover.titleLine2}
+          </h1>
+          <p className="ff-mono text-[13px] text-(--accent) mb-8 tracking-[0.02em]">
+            {PAGE_DATA.cover.sub}
+          </p>
+          <p className="text-[15px] text-(--text-secondary) max-w-xl leading-[1.7] mb-12">
+            {PAGE_DATA.cover.desc}
+          </p>
+          <div className="flex gap-10 max-sm:gap-6">
+            {PAGE_DATA.cover.stats.map((s, i) => (
+              <div key={i} className="flex flex-col items-center gap-0.5">
+                <span className="ff-display text-4xl font-bold text-foreground leading-none">
+                  {s.value}
+                </span>
+                <span className="ff-mono text-[10px] tracking-widest uppercase text-(--text-muted)">
+                  {s.label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="toc-body">
-          <a href="#q1" className="toc-row">
-            <span className="toc-n">01</span>
-            <span>React Fiber &amp; Concurrent Rendering</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q11" className="toc-row">
-            <span className="toc-n">11</span>
-            <span>Next.js Middleware &amp; Edge Runtime</span>
-            <span className="toc-tag tag-next">next</span>
-          </a>
-          <a href="#q2" className="toc-row">
-            <span className="toc-n">02</span>
-            <span>Reconciliation &amp; the Diffing Algorithm</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q12" className="toc-row">
-            <span className="toc-n">12</span>
-            <span>Caching Layers in Next.js</span>
-            <span className="toc-tag tag-next">next</span>
-          </a>
-          <a href="#q3" className="toc-row">
-            <span className="toc-n">03</span>
-            <span>Transitions &amp; useDeferredValue</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q13" className="toc-row">
-            <span className="toc-n">13</span>
-            <span>Server Actions &amp; Mutations</span>
-            <span className="toc-tag tag-next">next</span>
-          </a>
-          <a href="#q4" className="toc-row">
-            <span className="toc-n">04</span>
-            <span>Suspense &amp; Streaming SSR</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q14" className="toc-row">
-            <span className="toc-n">14</span>
-            <span>Route Handlers &amp; API Layer Design</span>
-            <span className="toc-tag tag-next">next</span>
-          </a>
-          <a href="#q5" className="toc-row">
-            <span className="toc-n">05</span>
-            <span>React 19 — useOptimistic &amp; useActionState</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q15" className="toc-row">
-            <span className="toc-n">15</span>
-            <span>Parallel &amp; Intercepting Routes</span>
-            <span className="toc-tag tag-next">next</span>
-          </a>
-          <a href="#q6" className="toc-row">
-            <span className="toc-n">06</span>
-            <span>State Management Architecture</span>
-            <span className="toc-tag tag-sys">system</span>
-          </a>
-          <a href="#q16" className="toc-row">
-            <span className="toc-n">16</span>
-            <span>Authentication Patterns in Next.js</span>
-            <span className="toc-tag tag-next">next</span>
-          </a>
-          <a href="#q7" className="toc-row">
-            <span className="toc-n">07</span>
-            <span>Render &amp; Re-render Optimization</span>
-            <span className="toc-tag tag-perf">perf</span>
-          </a>
-          <a href="#q17" className="toc-row">
-            <span className="toc-n">17</span>
-            <span>Monorepo &amp; Micro-frontend Architecture</span>
-            <span className="toc-tag tag-sys">system</span>
-          </a>
-          <a href="#q8" className="toc-row">
-            <span className="toc-n">08</span>
-            <span>Code Splitting &amp; Bundle Strategy</span>
-            <span className="toc-tag tag-perf">perf</span>
-          </a>
-          <a href="#q18" className="toc-row">
-            <span className="toc-n">18</span>
-            <span>Real-time UI: WebSockets &amp; SSE</span>
-            <span className="toc-tag tag-sys">system</span>
-          </a>
-          <a href="#q9" className="toc-row">
-            <span className="toc-n">09</span>
-            <span>React Query / Server State Management</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q19" className="toc-row">
-            <span className="toc-n">19</span>
-            <span>Designing a Component Library</span>
-            <span className="toc-tag tag-sys">system</span>
-          </a>
-          <a href="#q10" className="toc-row">
-            <span className="toc-n">10</span>
-            <span>Compound Components &amp; Advanced Patterns</span>
-            <span className="toc-tag tag-react">react</span>
-          </a>
-          <a href="#q20" className="toc-row">
-            <span className="toc-n">20</span>
-            <span>Observability &amp; Error Tracking</span>
-            <span className="toc-tag tag-sys">system</span>
-          </a>
-        </div>
-      </div>
 
-      {/* ═══════════════ CONTENT ═══════════════ */}
-      <div className="main">
-        {/* ── SECTION A ── */}
-        <div className="cat-divider">
-          <div className="cat-divider-inner">
-            <span className="cat-num">01 – 05</span>
-            <span className="cat-title">
-              React Internals &amp; Concurrent Features
+        {/* ── TABLE OF CONTENTS ── */}
+        <div className="bg-(--bg-surface) border-b border-(--border-default)">
+          <div className="py-12 px-20 max-md:px-6 border-b border-(--border-default) flex items-baseline gap-6">
+            <h2 className="ff-mono text-[11px] tracking-[0.15em] uppercase text-(--accent)">
+              // index
+            </h2>
+            <span className="ff-mono text-[11px] text-(--text-muted)">
+              20 questions across 4 domains
             </span>
-            <span className="toc-tag tag-react cat-pill">react core</span>
+          </div>
+          <div className="py-8 px-20 max-md:px-6 grid grid-cols-2 max-md:grid-cols-1 gap-x-12 gap-y-0.5">
+            {PAGE_DATA.toc.map((item) => (
+              <a
+                key={item.num}
+                href={`#q${item.num}`}
+                className="grid grid-cols-[32px_1fr_auto] items-center gap-3 py-2.5 border-b border-(--border-default) no-underline text-(--text-secondary) text-[13px] hover:text-foreground transition-colors"
+              >
+                <span className="ff-mono text-[10px] text-(--text-muted)">
+                  {item.num}
+                </span>
+                <span>{item.title}</span>
+                <span
+                  className={`tag-${item.tagType} ff-mono text-[9px] px-1.5 py-0.5 rounded-sm whitespace-nowrap`}
+                >
+                  {item.tag}
+                </span>
+              </a>
+            ))}
           </div>
         </div>
 
-        {/* Q1 */}
-        <div className="qcard" id="q1">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">01</span>
-              <p className="qcard-q">
-                What is the React Fiber architecture, and why was it a
-                fundamental rewrite of the original reconciler?
-              </p>
-              <span className="toc-tag tag-react">internals</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                React Fiber, introduced in React 16, replaced the original
-                stack-based reconciler with a linked-list data structure where
-                each component instance maps to a "fiber" node containing its
-                type, props, state, effect list, and pointers to its child,
-                sibling, and parent fibers. The critical problem with the
-                original reconciler was that the diffing of a large component
-                tree was a single synchronous, uninterruptible call stack
-                traversal — on slow devices, this would block the main thread
-                and drop frames. Fiber breaks that traversal into small units of
-                work that can be paused, resumed, aborted, and prioritized using
-                a scheduler that integrates with the browser's{" "}
-                <code>requestIdleCallback</code> API. React maintains two fiber
-                trees simultaneously — the current tree (what's on screen) and
-                the work-in-progress tree (what's being computed) — committing
-                the new tree atomically only when all work is complete, a
-                technique called double buffering. This architecture is what
-                enables all of Concurrent Mode's features: time-slicing,
-                Suspense, transitions, and streaming SSR.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">fiber-node.ts</span>
-                  <span className="cb-lang">typescript</span>
+        {/* ── MAIN CONTENT ── */}
+        <div className="max-w-250 mx-auto px-18 max-md:px-6 pb-25">
+          {PAGE_DATA.questions.map((q) => {
+            const cat = PAGE_DATA.categories.find((c) => c.startQ === q.id);
+            return (
+              <div key={q.id}>
+                {cat && (
+                  <div
+                    className={`${q.id === 1 ? "mt-16" : "mt-20"} mb-12 flex items-center gap-4`}
+                  >
+                    <span className="ff-mono text-[10px] tracking-widest text-(--text-muted) shrink-0">
+                      {cat.range}
+                    </span>
+                    <span className="ff-display text-[26px] font-bold text-foreground tracking-tight shrink-0">
+                      {cat.title}
+                    </span>
+                    <span
+                      className={`tag-${cat.tagType} ff-mono text-[9px] px-2.5 py-1 rounded-full tracking-[0.05em] uppercase shrink-0`}
+                    >
+                      {cat.tagLabel}
+                    </span>
+                    <div className="flex-1 h-px bg-(--border-default)" />
+                  </div>
+                )}
+
+                <div
+                  id={`q${String(q.id).padStart(2, "0")}`}
+                  className="mb-16 border border-(--border-default) rounded overflow-hidden bg-(--bg-surface) hover:border-(--border-strong) transition-colors"
+                >
+                  {/* Question header */}
+                  <div className="px-7 py-5 max-md:px-4 grid grid-cols-[auto_1fr_auto] items-start gap-4 border-b border-(--border-default) bg-(--bg-hover)">
+                    <span className="ff-mono text-[11px] text-(--accent) mt-1 min-w-6">
+                      {String(q.id).padStart(2, "0")}
+                    </span>
+                    <p className="ff-display text-[18px] font-bold leading-[1.35] text-foreground tracking-tight">
+                      {renderSegs(q.question)}
+                    </p>
+                    <span
+                      className={`tag-${q.tagType} ff-mono text-[9px] px-1.5 py-0.5 rounded-sm whitespace-nowrap mt-1`}
+                    >
+                      {q.tag}
+                    </span>
+                  </div>
+
+                  {/* Answer body */}
+                  <div className="px-7 py-6 max-md:px-4">
+                    <p className="text-(--text-secondary) text-[14px] leading-[1.85]">
+                      {renderSegs(q.answer)}
+                    </p>
+
+                    {q.code && (
+                      <div className="mt-5 border border-[#21262d] rounded overflow-hidden">
+                        <div className="bg-[#161b22] px-4 py-2 flex items-center justify-between border-b border-[#21262d]">
+                          <span className="cb-dot ff-mono text-[11px] text-[#7d8590] flex items-center gap-2">
+                            {q.code.file}
+                          </span>
+                          <span className="ff-mono text-[9px] text-[#484f58] uppercase tracking-widest">
+                            {q.code.lang}
+                          </span>
+                        </div>
+                        <pre className="bg-[#0d1117] px-6 py-5 overflow-x-auto ff-mono text-[12.5px] leading-[1.7] text-[#e6edf3] m-0">
+                          {renderCode(q.code.lines)}
+                        </pre>
+                      </div>
+                    )}
+
+                    {q.callout && (
+                      <div
+                        className={`callout ${q.callout.type === "info" ? "info" : q.callout.type === "good" ? "good" : ""} mt-4`}
+                      >
+                        <p>{renderSegs(q.callout.content)}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <pre dangerouslySetInnerHTML={{ __html: q1Pre }} />
               </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Q2 */}
-        <div className="qcard" id="q2">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">02</span>
-              <p className="qcard-q">
-                How does React's reconciliation algorithm work, and what are the
-                assumptions it makes to achieve O(n) complexity?
-              </p>
-              <span className="toc-tag tag-react">internals</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                A naive tree diffing algorithm comparing two arbitrary trees has
-                O(n³) time complexity, which is prohibitive for UI trees.
-                React's reconciler achieves O(n) by making two heuristic
-                assumptions: first, elements of different types produce entirely
-                different trees, so React tears down the old tree and builds a
-                new one from scratch when the root element type changes rather
-                than diffing children. Second, developers signal element
-                identity across renders using the <code>key</code> prop —
-                without a key, React matches elements by position, which breaks
-                on reordering; with a stable key, React can track which item
-                moved, was added, or was removed in a list efficiently. The
-                algorithm walks the tree level-by-level (breadth-first),
-                comparing each fiber by type: same type means update in place
-                (reconcile props), different type means unmount and remount.
-                Understanding this is critical for performance — placing
-                components conditionally can cause expensive unmount/remount
-                cycles instead of cheap in-place updates if the element type or
-                key position changes.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">
-                    reconciliation-pitfall.tsx
-                  </span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q2Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q3 */}
-        <div className="qcard" id="q3">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">03</span>
-              <p className="qcard-q">
-                What are React Transitions (<code>useTransition</code> and{" "}
-                <code>startTransition</code>), and how do they differ from{" "}
-                <code>useDeferredValue</code>?
-              </p>
-              <span className="toc-tag tag-react">concurrent</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                <code>startTransition</code> marks a state update as non-urgent,
-                telling React's scheduler that it can be interrupted by
-                higher-priority updates like user input. This is used to keep
-                the UI responsive during expensive state transitions — for
-                example, filtering a large dataset where you want the input to
-                feel instant while the list update can lag slightly.{" "}
-                <code>useTransition</code> is the hook version that also returns
-                an <code>isPending</code> boolean, allowing you to show a
-                loading indicator while the transition is in progress without
-                blocking the current UI. <code>useDeferredValue</code> is
-                semantically different: instead of wrapping a state setter, you
-                wrap a derived value, and React may render the component with
-                the old deferred value while the new value is still being
-                calculated — useful when you receive props you can't wrap in{" "}
-                <code>startTransition</code>. A key rule: transitions work only
-                with React state and state-derived renders, not with native DOM
-                input values, so the controlled input's state update must remain
-                urgent while only the expensive downstream computation is
-                deferred.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">
-                    search-with-transition.tsx
-                  </span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q3Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q4 */}
-        <div className="qcard" id="q4">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">04</span>
-              <p className="qcard-q">
-                How does React Suspense work at a deep level, and what does
-                Streaming SSR actually mean in Next.js?
-              </p>
-              <span className="toc-tag tag-react">concurrent</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Suspense works by having a child component "throw" a Promise
-                during rendering — a contract that React's concurrent renderer
-                understands. React catches the thrown Promise, renders the
-                nearest <code>&lt;Suspense&gt;</code> boundary's fallback, and
-                subscribes to the Promise; when it resolves, React re-renders
-                the subtree. This is how <code>React.lazy</code> enables code
-                splitting and how data-fetching frameworks like Relay integrate.
-                In Next.js, Streaming SSR extends this to the server: instead of
-                waiting for all server-side data fetching to finish before
-                sending any HTML (the traditional SSR waterfall), Next.js
-                streams the HTML shell immediately and sends each Suspense
-                boundary's content as its data resolves, via HTTP chunked
-                transfer encoding. The browser progressively renders each chunk
-                as it arrives, dramatically reducing Time to First Byte (TTFB)
-                and Time to Interactive (TTI) for data-heavy pages. This is
-                powered by React's <code>renderToPipeableStream</code> (Node.js)
-                and <code>renderToReadableStream</code> (Edge) APIs.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">app/dashboard/page.tsx</span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q4Pre }} />
-              </div>
-              <div className="callout info">
-                <p>
-                  <strong>Key insight:</strong> wrapping each slow data-fetching
-                  component in its own Suspense boundary means they stream in
-                  parallel — the slowest component no longer holds up everything
-                  else.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q5 */}
-        <div className="qcard" id="q5">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">05</span>
-              <p className="qcard-q">
-                What are <code>useOptimistic</code> and{" "}
-                <code>useActionState</code> in React 19, and how do they change
-                how you handle mutations?
-              </p>
-              <span className="toc-tag tag-react">react 19</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                <code>useOptimistic</code> lets you immediately show an
-                assumed-success state while an async mutation is in flight,
-                rolling back automatically if the mutation fails. This
-                eliminates the manual boilerplate of tracking optimistic state
-                alongside real state — you pass it the real state and a reducer
-                that computes the optimistic view, and React handles the
-                reconciliation when the server responds.{" "}
-                <code>useActionState</code> (formerly <code>useFormState</code>)
-                is designed for form-based mutations — it wraps an async action
-                function and returns the current state, the action handler, and
-                an <code>isPending</code> flag. Together with HTML{" "}
-                <code>&lt;form action={"{...}"}&gt;</code> (which React 19
-                natively supports), these hooks make form mutations fully
-                declarative with no manual loading/error state management.
-                Critically, these patterns work with both Server Actions and
-                client-side async functions, and they integrate with React's
-                transition system so the UI stays interactive during the
-                mutation.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">like-button.tsx</span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q5Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── SECTION B ── */}
-        <div className="cat-divider">
-          <div className="cat-divider-inner">
-            <span className="cat-num">06 – 10</span>
-            <span className="cat-title">
-              Architecture &amp; Performance Patterns
+        {/* ── FOOTER ── */}
+        <div className="border-t border-(--border-default) px-20 max-md:px-6 py-8 flex max-md:flex-col max-md:gap-4 justify-between items-center bg-(--bg-surface)">
+          <div className="flex items-center gap-4">
+            <span className="ff-display text-lg font-bold italic text-foreground">
+              {PAGE_DATA.footer.logo}
             </span>
-            <span className="toc-tag tag-sys cat-pill">system design</span>
+            <span className="text-(--border-default)">|</span>
+            <span className="ff-mono text-[11px] text-(--text-muted)">
+              {PAGE_DATA.footer.desc}
+            </span>
           </div>
-        </div>
-
-        {/* Q6 */}
-        <div className="qcard" id="q6">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">06</span>
-              <p className="qcard-q">
-                How do you choose between local state, Context, Zustand, and a
-                server-state library like TanStack Query? Design the state layer
-                for a large app.
-              </p>
-              <span className="toc-tag tag-sys">architecture</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                The first distinction to make is between server state (remote
-                data that lives on a server and must be fetched, cached, and
-                synchronized) and client state (UI state that lives entirely in
-                the browser, like modal open/closed or a selected tab). Server
-                state should be managed by a dedicated library like TanStack
-                Query or SWR — they handle caching, background revalidation,
-                deduplication, optimistic updates, and race conditions in ways
-                that <code>useEffect</code>-based manual fetching never will.
-                Client state should start as local component state and only be
-                lifted or globalized when multiple unrelated components
-                genuinely need it. For shared client state, React Context is
-                sufficient for low-frequency updates like theme or auth user,
-                but it is not optimized for high-frequency updates because all
-                consumers re-render on any change. For more complex or
-                high-frequency shared client state, a fine-grained store like
-                Zustand or Jotai is appropriate — they use subscriptions that
-                re-render only the components that read the changed slice. A
-                mature large-scale app typically uses TanStack Query for all
-                server state, Zustand for shared client state, and local{" "}
-                <code>useState</code>/<code>useReducer</code> for everything
-                else.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">state-architecture.ts</span>
-                  <span className="cb-lang">typescript</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q6Pre }} />
-              </div>
-            </div>
+          <div className="ff-mono text-[11px] text-(--text-muted) text-right leading-[1.9]">
+            {PAGE_DATA.footer.right[0]}
+            <br />
+            {PAGE_DATA.footer.right[1]}
           </div>
-        </div>
-
-        {/* Q7 */}
-        <div className="qcard" id="q7">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">07</span>
-              <p className="qcard-q">
-                Walk through a systematic approach to diagnosing and fixing
-                excessive re-renders in a React application.
-              </p>
-              <span className="toc-tag tag-perf">performance</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                The first tool is React DevTools Profiler — record an
-                interaction, then inspect which components re-rendered and why
-                (it shows "rendered because props changed", "rendered because
-                parent rendered", etc.). The most common cause of wasted renders
-                is an unstable reference passed as a prop: a new object or array
-                literal <code>{"{}"}</code> / <code>{"[]"}</code> or an inline
-                function created during a parent's render has a new identity on
-                every render, defeating <code>React.memo</code>'s shallow
-                comparison. Fix these with <code>useMemo</code> for
-                objects/arrays and <code>useCallback</code> for functions — but
-                only after profiling confirms the component is expensive to
-                re-render. The second common cause is Context value instability:
-                if you pass an inline object to a Provider's <code>value</code>{" "}
-                prop, all consumers re-render on every provider re-render
-                regardless of whether relevant data changed; fix by memoizing
-                the context value with <code>useMemo</code> or splitting into
-                separate contexts for different update frequencies. For lists,
-                ensure keys are stable and use virtualization (TanStack Virtual)
-                once items exceed a few hundred. Finally, state colocation —
-                moving state down to the leaf component that actually uses it —
-                is often the highest-leverage fix because it narrows the
-                re-render blast radius without any memoization overhead.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">stable-context.tsx</span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q7Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q8 */}
-        <div className="qcard" id="q8">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">08</span>
-              <p className="qcard-q">
-                How does code splitting work in React and Next.js, and how do
-                you design a bundle splitting strategy for a large application?
-              </p>
-              <span className="toc-tag tag-perf">performance</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Webpack and Turbopack (Next.js's bundler) use dynamic{" "}
-                <code>import()</code> expressions as split points, emitting a
-                separate chunk for each one that is only downloaded when needed.
-                In React, <code>React.lazy(() =&gt; import('./Modal'))</code>{" "}
-                paired with <code>Suspense</code> defers a component's chunk
-                until the first render. Next.js handles route-level splitting
-                automatically in both the Pages and App Router — each route
-                segment gets its own JS bundle. The design decisions concern
-                what to split beyond route boundaries: heavy third-party
-                libraries that are not needed on the initial render (chart
-                libraries, rich text editors, date pickers) are prime candidates
-                for lazy loading. In the App Router, marking a component{" "}
-                <code>"use client"</code> already scopes it out of the server
-                bundle; within client components,{" "}
-                <code>dynamic(() =&gt; import(...), {"{ ssr: false }"})</code>{" "}
-                prevents SSR for browser-only modules like D3 or Mapbox. You can
-                analyze your bundles with <code>@next/bundle-analyzer</code> to
-                find unexpected large dependencies and duplication across
-                chunks, then use <code>optimizePackageImports</code> in{" "}
-                <code>next.config.js</code> to enable tree-shaking for libraries
-                that don't support it natively.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">dynamic-import.tsx</span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q8Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q9 */}
-        <div className="qcard" id="q9">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">09</span>
-              <p className="qcard-q">
-                How does TanStack Query manage server state, and how do you
-                design cache invalidation and synchronization strategies?
-              </p>
-              <span className="toc-tag tag-react">server state</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                TanStack Query (React Query) represents each piece of server
-                state as a cache entry identified by a <code>queryKey</code>{" "}
-                array. When a query's data ages beyond <code>staleTime</code>,
-                it is marked stale and will be refetched in the background on
-                the next mount, window focus, or network reconnect — the
-                component is never left with a loading spinner, it renders stale
-                data immediately while fresh data arrives. Mutations use{" "}
-                <code>useMutation</code> and their <code>onSuccess</code>{" "}
-                callback is the primary place for cache invalidation via{" "}
-                <code>
-                  queryClient.invalidateQueries({"{ queryKey: [...] }"})
-                </code>
-                , which marks matching entries stale and triggers background
-                refetches. For instant UI feedback, optimistic updates can be
-                implemented in <code>onMutate</code> with a rollback in{" "}
-                <code>onError</code>. At scale, the key design decision is query
-                key structure — using hierarchical keys like{" "}
-                <code>['posts', {"{ page, filter }"}]</code> enables precise or
-                broad invalidation: <code>['posts']</code> as the invalidation
-                key invalidates all post-related queries. In Next.js App Router,
-                TanStack Query's <code>prefetchQuery</code> and{" "}
-                <code>HydrationBoundary</code> allow you to prefetch on the
-                server and hydrate on the client with zero loading state on
-                first render.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Q10 */}
-        <div className="qcard" id="q10">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">10</span>
-              <p className="qcard-q">
-                What are Compound Components and the Render Props pattern? When
-                are they the right architectural choice?
-              </p>
-              <span className="toc-tag tag-react">patterns</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                The Compound Component pattern models a group of related
-                components that share implicit state through Context — similar
-                to how <code>&lt;select&gt;</code> and{" "}
-                <code>&lt;option&gt;</code> work natively. The parent component
-                owns and provides the shared state; child components consume it
-                via context without any explicit prop-drilling. This gives
-                consumers declarative, flexible composition — they can reorder,
-                omit, or augment child components freely, unlike a monolithic
-                component controlled by a single <code>config</code> prop. The
-                Render Props pattern passes a function as a prop (or as{" "}
-                <code>children</code>) and calls it with internal state, giving
-                the consumer full control over rendering. In modern React,
-                custom hooks largely replace render props since they extract the
-                logic without influencing the component hierarchy, which is
-                cleaner. Compound components remain the right choice when the
-                API is inherently structural and compositional —{" "}
-                <code>&lt;Tabs&gt;</code>, <code>&lt;Accordion&gt;</code>,{" "}
-                <code>&lt;Select&gt;</code>, <code>&lt;Menu&gt;</code> —
-                especially in component libraries where consumers must be able
-                to slot in their own markup within the structure.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">tabs-compound.tsx</span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q10Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── SECTION C ── */}
-        <div className="cat-divider">
-          <div className="cat-divider-inner">
-            <span className="cat-num">11 – 16</span>
-            <span className="cat-title">Next.js Deep Internals</span>
-            <span className="toc-tag tag-next cat-pill">next.js</span>
-          </div>
-        </div>
-
-        {/* Q11 */}
-        <div className="qcard" id="q11">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">11</span>
-              <p className="qcard-q">
-                What is Next.js Middleware, and how does it differ from running
-                code in a Route Handler or a Server Component?
-              </p>
-              <span className="toc-tag tag-next">edge</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Middleware runs on the Edge Runtime at the CDN layer before the
-                request reaches your application — before any route matching,
-                Server Components, or Route Handlers execute. It receives a{" "}
-                <code>NextRequest</code> and must return a{" "}
-                <code>NextResponse</code> (rewrite, redirect, or pass through),
-                making it the right place for logic that must run on every
-                request with minimal latency: auth token validation, A/B test
-                routing, geolocation-based redirects, and bot protection.
-                Because it runs on the Edge Runtime, it has access only to the
-                Web Fetch API and a constrained runtime — it cannot use Node.js
-                APIs like <code>fs</code>, native database drivers, or most npm
-                packages. A Route Handler (<code>route.ts</code>) runs in the
-                full Node.js environment and is appropriate for full API
-                endpoints with database access. A Server Component runs during
-                the render phase and is appropriate for fetching data to hydrate
-                HTML. A common pattern is to use Middleware only for fast,
-                stateless routing decisions (verify JWT signature against a
-                secret) and push any database lookups into Server Components or
-                Route Handlers.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">middleware.ts</span>
-                  <span className="cb-lang">typescript</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q11Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q12 */}
-        <div className="qcard" id="q12">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">12</span>
-              <p className="qcard-q">
-                Explain the four caching layers in Next.js App Router and how
-                they interact with each other.
-              </p>
-              <span className="toc-tag tag-next">caching</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Next.js App Router has four distinct caching mechanisms that
-                operate at different layers. The Request Memoization layer
-                deduplicates identical <code>fetch()</code> calls made during a
-                single render pass on the server — if two Server Components
-                independently call the same API endpoint, only one network
-                request is made; this is scoped to a single request lifecycle
-                and is automatic. The Data Cache is a persistent server-side
-                HTTP cache that stores <code>fetch</code> responses across
-                requests and deployments, controlled by{" "}
-                <code>{"{ cache: 'force-cache' }"}</code> (default) or{" "}
-                <code>{"{ next: { revalidate: N } }"}</code> for time-based ISR;
-                it persists until explicitly revalidated via{" "}
-                <code>revalidatePath()</code> or <code>revalidateTag()</code>.
-                The Full Route Cache stores the rendered HTML and RSC payload
-                for statically generated routes at build time; dynamic routes
-                bypass it. The Router Cache is a client-side in-memory cache of
-                visited route segments that allows instant back/forward
-                navigation without re-fetching from the server; it uses
-                prefetched route data from <code>&lt;Link&gt;</code> components.
-                A common gotcha is that <code>revalidatePath()</code> only
-                clears the Data Cache and Full Route Cache on the server — users
-                who have the old route in their Router Cache still see stale UI
-                until they hard-refresh or the cache TTL expires.
-              </p>
-              <div className="callout">
-                <p>
-                  <strong>Production tip:</strong> use{" "}
-                  <code>revalidateTag()</code> over{" "}
-                  <code>revalidatePath()</code> for surgical cache busting — tag
-                  each fetch with a domain tag (
-                  <code>{"{ next: { tags: ['posts'] } }"}</code>) and invalidate
-                  the whole domain when a mutation occurs.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q13 */}
-        <div className="qcard" id="q13">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">13</span>
-              <p className="qcard-q">
-                How do Next.js Server Actions work internally, and what security
-                considerations must you design around?
-              </p>
-              <span className="toc-tag tag-next">mutations</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Server Actions are async functions marked with{" "}
-                <code>"use server"</code> that are compiled by Next.js into POST
-                endpoints with auto-generated, encrypted action IDs — when
-                called from the client, React serializes the arguments, sends a
-                POST request to the current URL with the action ID, and
-                deserializes the return value. They can be called from form{" "}
-                <code>action</code> attributes (which works even before JS
-                hydrates, providing progressive enhancement) or programmatically
-                from event handlers. Internally, they participate in the React
-                transition system, so the UI stays interactive and{" "}
-                <code>useActionState</code> captures pending/error state
-                automatically. The critical security consideration is that
-                Server Actions are public HTTP endpoints — any user can call any
-                action by its ID with arbitrary arguments. This means you must
-                validate every argument server-side (never trust client input),
-                authorize the current session on every action (re-check
-                permissions, never assume the call came from a legitimate UI
-                flow), and be aware that action IDs are stable across builds if
-                the function doesn't change. You should also rate-limit action
-                endpoints and validate <code>Content-Type</code> and{" "}
-                <code>Origin</code> headers to prevent CSRF from third-party
-                sites.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">actions/posts.ts</span>
-                  <span className="cb-lang">typescript</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q13Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q14 */}
-        <div className="qcard" id="q14">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">14</span>
-              <p className="qcard-q">
-                When should you use Route Handlers in Next.js, and how do you
-                design the API layer in an App Router project?
-              </p>
-              <span className="toc-tag tag-next">api design</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Route Handlers (<code>app/api/.../route.ts</code>) are Next.js's
-                first-class API endpoints running in the full Node.js
-                environment. In an App Router project, they are most necessary
-                for four cases: serving external clients (mobile apps,
-                third-party integrations) that can't use Server Actions;
-                handling webhooks from external services; implementing OAuth
-                callback flows; and serving streaming responses like SSE. For
-                internal data fetching from your own Next.js UI, Server
-                Components can call database/service functions directly —
-                bypassing the HTTP layer entirely — which is more efficient and
-                type-safe than going through a <code>/api</code> Route Handler.
-                Server Actions replace the "POST to an internal API endpoint"
-                pattern entirely. When you do design Route Handlers, structure
-                them around resources and use standard HTTP semantics, apply
-                authentication middleware consistently, validate request bodies
-                with Zod, and return proper status codes. For complex APIs,
-                consider co-locating route handlers alongside the feature they
-                serve (<code>app/(api)/posts/[id]/route.ts</code>) rather than
-                isolating them all in <code>app/api/</code>.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Q15 */}
-        <div className="qcard" id="q15">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">15</span>
-              <p className="qcard-q">
-                What are Parallel Routes and Intercepting Routes in Next.js, and
-                what UI patterns do they enable?
-              </p>
-              <span className="toc-tag tag-next">routing</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Parallel Routes allow you to render multiple independent pages
-                simultaneously within the same layout using named slots
-                (directories prefixed with <code>@</code>). The layout receives
-                each slot as a separate prop and can render them side-by-side —
-                this enables dashboards where different panels load and refresh
-                independently with their own loading and error states, or
-                split-view UIs. Each slot is a fully independent route segment
-                with its own Suspense boundary. Intercepting Routes (directories
-                prefixed with <code>(..)</code> or <code>(...)</code>) allow you
-                to "intercept" a navigation to show a different UI in the
-                current context while preserving the destination URL. The
-                canonical example is an Instagram-style photo modal: clicking a
-                photo in a feed intercepts the navigation to{" "}
-                <code>/photos/[id]</code> and renders it as a modal overlay on
-                the feed page; navigating directly to <code>/photos/[id]</code>{" "}
-                or refreshing shows the full photo page. Together, Parallel and
-                Intercepting Routes are combined to implement the "modal as a
-                route" pattern — the modal has a real URL, is shareable,
-                supports back/forward navigation, and renders as a full page on
-                direct access, all without complex client-side modal state
-                management.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Q16 */}
-        <div className="qcard" id="q16">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">16</span>
-              <p className="qcard-q">
-                Design a complete authentication system in Next.js App Router —
-                covering session storage, protected routes, and role-based
-                access control.
-              </p>
-              <span className="toc-tag tag-next">auth</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                A production auth system in Next.js App Router uses Auth.js
-                (NextAuth v5) as the foundation, configured with appropriate
-                providers (OAuth, credentials, magic link). Sessions are stored
-                in encrypted, <code>HttpOnly</code>, <code>Secure</code> cookies
-                using JWT or database sessions — JWT sessions are stateless and
-                scale without a session store, but can't be invalidated
-                instantly; database sessions support instant revocation at the
-                cost of a DB read per request. Route protection is layered:
-                Middleware handles the coarse-grained redirect (unauthenticated
-                users → <code>/login</code>) using only a fast cryptographic JWT
-                check, keeping the edge fast. Server Components perform
-                fine-grained authorization by calling <code>auth()</code> to get
-                the session and checking roles or permissions before rendering
-                sensitive data. Server Actions must re-verify auth on every call
-                since they're public endpoints. For RBAC, permissions should be
-                stored on the session object (or derived from it) to avoid a DB
-                round-trip on every check — but the authoritative role data must
-                be re-read on any mutation that requires up-to-date permissions.
-                Never implement access control in client components alone; they
-                are not a security boundary.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">app/admin/page.tsx</span>
-                  <span className="cb-lang">tsx</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q16Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── SECTION D ── */}
-        <div className="cat-divider">
-          <div className="cat-divider-inner">
-            <span className="cat-num">17 – 20</span>
-            <span className="cat-title">Production System Design</span>
-            <span className="toc-tag tag-sys cat-pill">system design</span>
-          </div>
-        </div>
-
-        {/* Q17 */}
-        <div className="qcard" id="q17">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">17</span>
-              <p className="qcard-q">
-                How would you architect a large React/Next.js application as a
-                monorepo, and what are the tradeoffs vs. a micro-frontend
-                approach?
-              </p>
-              <span className="toc-tag tag-sys">architecture</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                A monorepo consolidates multiple packages (the Next.js app, a
-                shared UI component library, shared utility functions, type
-                definitions) into a single repository managed by a tool like
-                Turborepo or Nx. The primary benefits are atomic commits across
-                packages, shared TypeScript types without publishing,
-                centralized dependency management, and a single CI pipeline with
-                incremental task caching — Turborepo's build cache means only
-                packages affected by a commit are rebuilt. The recommended
-                structure separates <code>apps/</code> (deployable applications)
-                from <code>packages/</code> (shared libraries), with each
-                package having its own <code>package.json</code> and TypeScript
-                config. A micro-frontend architecture instead deploys each
-                feature as an independently deployable app, stitched together at
-                runtime via Module Federation or at the CDN via edge
-                composition. Micro-frontends solve genuine organizational scale
-                problems — multiple teams owning independent deployments — but
-                introduce significant complexity: shared state between apps,
-                routing coordination, duplicated dependencies increasing bundle
-                size, and debugging across deployment boundaries. For most
-                organizations, a monorepo is the right choice; micro-frontends
-                should only be considered when independent deployability per
-                team is a hard requirement.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Q18 */}
-        <div className="qcard" id="q18">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">18</span>
-              <p className="qcard-q">
-                How do you implement real-time features in a Next.js application
-                — comparing WebSockets, Server-Sent Events, and polling?
-              </p>
-              <span className="toc-tag tag-sys">real-time</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                The right real-time primitive depends on communication
-                directionality and infrastructure constraints. Server-Sent
-                Events (SSE) are unidirectional (server → client) over a
-                standard HTTP connection, easy to implement in Next.js Route
-                Handlers with <code>ReadableStream</code>, and automatically
-                reconnect; they work through HTTP/2 multiplexing, proxies, and
-                CDNs. SSE is the right choice for live notifications, activity
-                feeds, and streaming AI responses. WebSockets are bidirectional
-                and lower-latency, suited for collaborative editing, multiplayer
-                features, and chat — but they require a persistent server
-                connection which conflicts with serverless and Edge deployments;
-                you typically need a dedicated WebSocket service (Ably, Pusher,
-                Supabase Realtime, or a Node.js server). Polling (repeated{" "}
-                <code>fetch</code> on an interval) is the simplest
-                implementation and appropriate when latency of 5–30 seconds is
-                acceptable — it works everywhere but wastes bandwidth. In
-                Next.js, integrate real-time subscriptions in a client-side
-                custom hook and combine with TanStack Query's{" "}
-                <code>queryClient.setQueryData()</code> to merge real-time
-                updates directly into the cache, keeping the rest of your data
-                layer consistent.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">app/api/stream/route.ts</span>
-                  <span className="cb-lang">typescript</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q18Pre }} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Q19 */}
-        <div className="qcard" id="q19">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">19</span>
-              <p className="qcard-q">
-                How would you design and build a scalable React component
-                library for use across multiple Next.js applications?
-              </p>
-              <span className="toc-tag tag-sys">design system</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                A production-grade component library has distinct concerns
-                across API design, build configuration, and distribution. For
-                API design, components should follow the Open/Closed principle —
-                expose a polymorphic <code>as</code> prop or use the Radix UI
-                "asChild" pattern to let consumers change the underlying element
-                without forking the component, and forward refs everywhere so
-                host apps can imperatively access DOM nodes. Build-wise, you
-                need to output both ESM and CJS from tools like tsup or Rollup,
-                with separate <code>.d.ts</code> type declarations and a proper{" "}
-                <code>exports</code> map in <code>package.json</code> for
-                subpath imports. CSS-in-JS libraries that generate styles at
-                runtime (Emotion, styled-components) create challenges in
-                Next.js App Router Server Components; a CSS Modules or Tailwind
-                approach is more compatible. For the token system, define design
-                tokens as CSS custom properties so they cascade and are
-                overridable without rebuilding the library. Version your
-                components semantically, maintain a storybook for visual testing
-                and documentation, and implement visual regression tests with
-                Chromatic to catch unintended UI changes across component
-                updates before they reach consumers.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Q20 */}
-        <div className="qcard" id="q20">
-          <div className="qcard-inner">
-            <div className="qcard-head">
-              <span className="qcard-num">20</span>
-              <p className="qcard-q">
-                How do you instrument a Next.js application for production
-                observability — error tracking, performance monitoring, and
-                logging?
-              </p>
-              <span className="toc-tag tag-sys">observability</span>
-            </div>
-            <div className="qcard-body">
-              <p className="qcard-answer">
-                Production observability covers three pillars: errors,
-                performance metrics, and structured logs. For error tracking,
-                Sentry is the standard — install <code>@sentry/nextjs</code> and
-                its wizard configures source map uploading and wraps both the
-                client and server automatically; the{" "}
-                <code>instrumentation.ts</code> file (Next.js's official hook
-                for server-side SDK initialization) is the correct place for
-                server SDK setup. For performance, Next.js's built-in{" "}
-                <code>useReportWebVitals</code> hook sends LCP, INP, and CLS to
-                any analytics endpoint; for deeper tracing, OpenTelemetry
-                integration in <code>instrumentation.ts</code> provides
-                distributed traces across server components, route handlers, and
-                database calls. Structured JSON logging on the server (using{" "}
-                <code>pino</code> or <code>winston</code>) is essential for
-                searchable logs in platforms like Datadog or Grafana Loki —
-                always include request ID, route, user ID, and duration in every
-                log entry. Client-side, the <code>web-vitals</code> package
-                provides exact metric values for real-user monitoring. Finally,
-                Next.js's <code>experimental.instrumentationHook</code> combined
-                with OpenTelemetry lets you trace the entire request lifecycle
-                from Middleware through Server Components to database calls in a
-                single distributed trace, which is invaluable for diagnosing
-                latency regressions in production.
-              </p>
-              <div className="cb">
-                <div className="cb-bar">
-                  <span className="cb-filename">instrumentation.ts</span>
-                  <span className="cb-lang">typescript</span>
-                </div>
-                <pre dangerouslySetInnerHTML={{ __html: q20Pre }} />
-              </div>
-              <div className="callout good">
-                <p>
-                  <strong>Best practice:</strong> always upload source maps to
-                  Sentry and add them to <code>.gitignore</code> /{" "}
-                  <code>.vercelignore</code> so stack traces in production show
-                  original TypeScript line numbers, not minified bundle offsets.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══════════════ FOOTER ═══════════════ */}
-      <div className="footer">
-        <div className="footer-left">
-          <span className="footer-logo">React &amp; Next.js</span>
-          <span className="footer-sep">|</span>
-          <span className="footer-desc">
-            // advanced interview preparation guide
-          </span>
-        </div>
-        <div className="footer-right">
-          20 questions · Advanced &amp; System Design
-          <br />
-          React 19 · Next.js 15 · App Router
         </div>
       </div>
     </>

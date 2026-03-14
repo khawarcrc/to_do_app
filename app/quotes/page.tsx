@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
 import { Quote, QuoteFormData, QuoteCategory, QUOTE_CATEGORY_CONFIG } from '@/types';
-import ThemeToggle from '@/components/ThemeToggle';
-import { useAuthStore } from '@/store/authStore';
+import MainNav from '@/components/MainNav';
 
 // ── Quote Modal ───────────────────────────────────────────────────────────────
 
@@ -615,23 +613,11 @@ function QuoteColumn({ category, quotes, onAdd, onEdit, onDelete }: ColumnProps)
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function QuotesPage() {
-  const { setUser, setInitialising } = useAuthStore();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [defaultCat, setDefaultCat] = useState<QuoteCategory>('daily');
-
-  /* ── Auth init ──────────────────────────────────────────── */
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.email) setUser({ email: data.email, sid: data.sid ?? '', createdAt: data.createdAt });
-      })
-      .finally(() => setInitialising(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /* ── Fetch quotes ───────────────────────────────────────── */
   const fetchQuotes = useCallback(async () => {
@@ -710,98 +696,68 @@ export default function QuotesPage() {
         color: 'var(--text-primary)',
       }}
     >
-      {/* ── Top Bar ─────────────────────────────────────────── */}
-      <header
+      {/* ── Nav ─────────────────────────────────────────────── */}
+      <MainNav />
+
+      {/* ── Sub-header ──────────────────────────────────────── */}
+      <div
         style={{
-          height: '56px',
           flexShrink: 0,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '0 20px',
+          height: '44px',
           borderBottom: '1px solid var(--border-default)',
           backgroundColor: 'var(--bg-surface)',
-          boxShadow: 'var(--shadow-sm)',
         }}
       >
-        {/* Left: Back + Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Link
-            href="/"
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div
             style={{
+              width: '28px',
+              height: '28px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(139,92,246,0.12)',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '5px 10px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-default)',
-              backgroundColor: 'var(--bg-hover)',
-              color: 'var(--text-secondary)',
-              textDecoration: 'none',
-              fontSize: '13px',
-              fontWeight: 500,
+              justifyContent: 'center',
+              color: '#8b5cf6',
             }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
             </svg>
-            Home
-          </Link>
-
-          <div style={{ width: '1px', height: '20px', backgroundColor: 'var(--border-default)' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '8px',
-                backgroundColor: 'rgba(139,92,246,0.12)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#8b5cf6',
-              }}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '15px' }}>Quotes &amp; Insights</span>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              {loading ? '…' : `${quotes.length} entries`}
-            </span>
           </div>
+          <span style={{ fontWeight: 700, fontSize: '15px' }}>Quotes &amp; Insights</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+            {loading ? '…' : `${quotes.length} entries`}
+          </span>
         </div>
-
-        {/* Right: Add + Theme */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <ThemeToggle />
-          <button
-            onClick={() => openAdd('daily')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 16px',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: 'var(--accent)',
-              color: '#fff',
-              fontSize: '13.5px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(12,102,228,0.25)',
-            }}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Quote
-          </button>
-        </div>
-      </header>
+        <button
+          onClick={() => openAdd('daily')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 16px',
+            borderRadius: '8px',
+            border: 'none',
+            backgroundColor: 'var(--accent)',
+            color: '#fff',
+            fontSize: '13.5px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(12,102,228,0.25)',
+          }}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Quote
+        </button>
+      </div>
 
       {/* ── Board ────────────────────────────────────────────── */}
       {loading ? (
