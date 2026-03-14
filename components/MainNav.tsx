@@ -301,6 +301,7 @@ export default function MainNav() {
           boxShadow: 'var(--shadow-md)',
           padding: '12px 16px 16px',
           display: 'flex', flexDirection: 'column', gap: '4px',
+          maxHeight: 'calc(100vh - 64px)', overflowY: 'auto',
         }}>
           {/* Static section */}
           <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '6px 8px 4px' }}>Static</div>

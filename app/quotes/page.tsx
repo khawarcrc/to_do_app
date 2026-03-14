@@ -189,7 +189,7 @@ function QuoteModal({ quote, defaultCategory = 'daily', onClose, onSave }: Modal
             </div>
 
             {/* Author */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                   Author
@@ -482,9 +482,9 @@ function QuoteColumn({ category, quotes, onAdd, onEdit, onDelete }: ColumnProps)
 
   return (
     <div
+      className="sm:min-w-[260px]"
       style={{
         flex: '1 1 0',
-        minWidth: '260px',
         display: 'flex',
         flexDirection: 'column',
         gap: '0',
@@ -782,13 +782,14 @@ export default function QuotesPage() {
         <div
           style={{
             flex: 1,
-            overflowX: 'auto',
-            overflowY: 'hidden',
+            overflow: 'auto',
             padding: '20px',
             display: 'flex',
             gap: '16px',
             alignItems: 'stretch',
+            flexDirection: 'column',
           }}
+          className="sm:!flex-row sm:overflow-x-auto sm:overflow-y-hidden"
         >
           {CATEGORIES.map((cat) => (
             <QuoteColumn

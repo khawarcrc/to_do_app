@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useThemeStore } from "@/store/themeStore";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DATA — SINGLE SOURCE OF TRUTH
@@ -1370,7 +1371,7 @@ export default function DockerGuide() {
   const [navOpen, setNavOpen] = useState(false);
   const [openQA, setOpenQA] = useState<Set<string>>(new Set());
   const [openScenario, setOpenScenario] = useState<Set<string>>(new Set());
-  const [isDark, setIsDark] = useState(true);
+  const isDark = useThemeStore((s) => s.isDark);
 
   const T = getTheme(isDark);
 
@@ -1449,22 +1450,6 @@ export default function DockerGuide() {
           backgroundSize: "52px 52px",
         }}
       />
-
-      {/* Theme toggle — fixed top-right */}
-      <button
-        onClick={() => setIsDark((d) => !d)}
-        className="fixed top-4 right-5 z-[110] flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200 shadow-sm"
-        style={{
-          background: T.toggleBg,
-          border: `1px solid ${T.toggleBorder}`,
-          color: T.toggleColor,
-          backdropFilter: "blur(8px)",
-        }}
-        aria-label="Toggle theme"
-      >
-        <span className="text-sm leading-none">{isDark ? "☀️" : "🌙"}</span>
-        <span className="hidden sm:inline">{isDark ? "Light" : "Dark"}</span>
-      </button>
 
       {/* Mobile nav button */}
       {!navOpen && (

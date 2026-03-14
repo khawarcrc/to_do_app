@@ -272,9 +272,9 @@ function TaskColumn({ category, tasks, sensors, onToggle, onDelete, onRename, on
 
   return (
     <div
+      className="sm:min-w-[260px]"
       style={{
         flex: '1 1 0',
-        minWidth: '260px',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'var(--bg-subtle, var(--bg-surface))',
@@ -443,8 +443,8 @@ export default function BacklogPage() {
       <MainNav />
 
       {/* Sub-header */}
-      <div style={{ flexShrink: 0, padding: '10px clamp(1rem, 3vw, 2rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', gap: '16px', backgroundColor: 'var(--bg-surface)' }}>
-        <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+      <div style={{ flexShrink: 0, padding: '10px clamp(1rem, 3vw, 2rem)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', gap: '10px', backgroundColor: 'var(--bg-surface)', flexWrap: 'wrap' }}>
+        <p className="hidden sm:block" style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
           Double-click a title to edit · Drag ⠿ to reorder within each column
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
@@ -482,7 +482,7 @@ export default function BacklogPage() {
           Loading tasks…
         </div>
       ) : (
-        <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', padding: '20px clamp(1rem, 3vw, 2rem)', display: 'flex', gap: '16px', alignItems: 'stretch' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px clamp(1rem, 3vw, 2rem)', display: 'flex', gap: '16px', alignItems: 'stretch', flexDirection: 'column' }} className="sm:!flex-row sm:overflow-x-auto sm:overflow-y-hidden">
           {(['technical', 'communications'] as TaskCategory[]).map((cat) => (
             <TaskColumn
               key={cat}
