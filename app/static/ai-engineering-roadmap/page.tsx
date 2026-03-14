@@ -1457,7 +1457,7 @@ function RichText({ text, color }: { text: string; color: string }) {
     <>
       {parts.map((p, i) =>
         i % 2 === 1 ? (
-          <strong key={i} className="font-medium" style={{ color: "#e8edf3" }}>
+          <strong key={i} className="font-medium" style={{ color: "var(--ai-text)" }}>
             {p}
           </strong>
         ) : (
@@ -1517,11 +1517,38 @@ export default function AIRoadmapPage() {
   }, []);
 
   return (
+    <>
+    <style>{`
+      .ai-roadmap {
+        --ai-page-bg: #f8fafc;
+        --ai-card-bg: #ffffff;
+        --ai-card-inner: #f1f5f9;
+        --ai-section-bg: #f3f4f6;
+        --ai-text: #0f172a;
+        --ai-text-sec: #475569;
+        --ai-text-muted: #94a3b8;
+        --ai-divider: rgba(0,0,0,0.08);
+        --ai-grid: rgba(0,150,120,0.04);
+        --ai-overlay: rgba(0,0,0,0.3);
+      }
+      :is(.dark) .ai-roadmap {
+        --ai-page-bg: #080b10;
+        --ai-card-bg: #0d1117;
+        --ai-card-inner: #131920;
+        --ai-section-bg: #161d27;
+        --ai-text: #e8edf3;
+        --ai-text-sec: #8b98a8;
+        --ai-text-muted: #4a5568;
+        --ai-divider: var(--ai-divider);
+        --ai-grid: var(--ai-grid);
+        --ai-overlay: var(--ai-overlay);
+      }
+    `}</style>
     <div
-      className="min-h-screen"
+      className="ai-roadmap min-h-screen"
       style={{
-        background: "#080b10",
-        color: "#e8edf3",
+        background: "var(--ai-page-bg)",
+        color: "var(--ai-text)",
         fontFamily: "'DM Sans', sans-serif",
         fontWeight: 300,
         lineHeight: 1.7,
@@ -1533,7 +1560,7 @@ export default function AIRoadmapPage() {
         className="fixed inset-0 pointer-events-none z-0"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px)",
+            "linear-gradient(var(--ai-grid) 1px, transparent 1px), linear-gradient(90deg, var(--ai-grid) 1px, transparent 1px)",
           backgroundSize: "48px 48px",
         }}
       />
@@ -1544,9 +1571,9 @@ export default function AIRoadmapPage() {
           onClick={() => setNavOpen(true)}
           className="fixed bottom-6 right-6 z-[100] lg:hidden w-11 h-11 rounded-full flex items-center justify-center text-lg shadow-xl"
           style={{
-            background: "#131920",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#8b98a8",
+            background: "var(--ai-card-inner)",
+            border: "1px solid var(--ai-divider)",
+            color: "var(--ai-text-sec)",
           }}
           aria-label="Open navigation"
         >
@@ -1556,7 +1583,7 @@ export default function AIRoadmapPage() {
       {navOpen && (
         <div
           className="fixed inset-0 z-[98] lg:hidden"
-          style={{ background: "rgba(0,0,0,0.5)" }}
+          style={{ background: "var(--ai-overlay)" }}
           onClick={() => setNavOpen(false)}
         />
       )}
@@ -1566,16 +1593,16 @@ export default function AIRoadmapPage() {
         <nav
           className={`fixed lg:sticky top-0 lg:top-6 z-[99] lg:z-auto shrink-0 overflow-y-auto max-h-screen lg:max-h-[calc(100vh-48px)] w-[220px] lg:w-[220px] px-4 py-5 transition-transform duration-200 ${navOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
           style={{
-            background: navOpen ? "#0d1117" : "transparent",
-            borderRight: navOpen ? "1px solid rgba(255,255,255,0.06)" : "none",
+            background: navOpen ? "var(--ai-card-bg)" : "transparent",
+            borderRight: navOpen ? "1px solid var(--ai-divider)" : "none",
             scrollbarWidth: "none",
           }}
         >
           <div
             className="mb-4 pb-2.5 text-[9px] tracking-[0.2em] uppercase font-mono"
             style={{
-              color: "#4a5568",
-              borderBottom: "1px solid rgba(255,255,255,0.06)",
+              color: "var(--ai-text-muted)",
+              borderBottom: "1px solid var(--ai-divider)",
             }}
           >
             // Phases
@@ -1590,10 +1617,10 @@ export default function AIRoadmapPage() {
                     onClick={() => setNavOpen(false)}
                     className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-all duration-200 no-underline"
                     style={{
-                      color: isActive ? "#e8edf3" : "#4a5568",
-                      background: isActive ? "#131920" : "transparent",
+                      color: isActive ? "var(--ai-text)" : "var(--ai-text-muted)",
+                      background: isActive ? "var(--ai-card-inner)" : "transparent",
                       border: isActive
-                        ? "1px solid rgba(255,255,255,0.06)"
+                        ? "1px solid var(--ai-divider)"
                         : "1px solid transparent",
                     }}
                   >
@@ -1640,7 +1667,7 @@ export default function AIRoadmapPage() {
                     </span>
                     <span
                       className="font-mono text-[9px] shrink-0"
-                      style={{ color: isActive ? "#8b98a8" : "#4a5568" }}
+                      style={{ color: isActive ? "var(--ai-text-sec)" : "var(--ai-text-muted)" }}
                     >
                       {phase.num}
                     </span>
@@ -1652,17 +1679,17 @@ export default function AIRoadmapPage() {
           {/* Progress */}
           <div
             className="mt-4 pt-3.5"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ borderTop: "1px solid var(--ai-divider)" }}
           >
             <div
               className="font-mono text-[9px] tracking-[0.15em] uppercase mb-2"
-              style={{ color: "#4a5568" }}
+              style={{ color: "var(--ai-text-muted)" }}
             >
               // Scroll progress
             </div>
             <div
               className="h-[3px] rounded-sm overflow-hidden"
-              style={{ background: "#131920" }}
+              style={{ background: "var(--ai-card-inner)" }}
             >
               <div
                 className="h-full rounded-sm transition-all"
@@ -1705,7 +1732,7 @@ export default function AIRoadmapPage() {
               </p>
               <h1
                 className="text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight mb-6"
-                style={{ fontFamily: "'Syne', sans-serif", color: "#e8edf3" }}
+                style={{ fontFamily: "'Syne', sans-serif", color: "var(--ai-text)" }}
               >
                 {SITE.heroTitle}
                 <br />
@@ -1723,7 +1750,7 @@ export default function AIRoadmapPage() {
               </h1>
               <p
                 className="text-base max-w-[640px] leading-[1.8] mb-10 pl-5"
-                style={{ color: "#8b98a8", borderLeft: "2px solid #00d4aa" }}
+                style={{ color: "var(--ai-text-sec)", borderLeft: "2px solid #00d4aa" }}
               >
                 {SITE.heroIntro}
               </p>
@@ -1751,13 +1778,13 @@ export default function AIRoadmapPage() {
             <nav
               className="rounded-xl p-6 mb-16"
               style={{
-                background: "#0d1117",
-                border: "1px solid rgba(255,255,255,0.06)",
+                background: "var(--ai-card-bg)",
+                border: "1px solid var(--ai-divider)",
               }}
             >
               <div
                 className="font-mono text-[10px] tracking-[0.18em] uppercase mb-4"
-                style={{ color: "#4a5568" }}
+                style={{ color: "var(--ai-text-muted)" }}
               >
                 // Quick Navigation
               </div>
@@ -1773,20 +1800,20 @@ export default function AIRoadmapPage() {
                     href={`#${phase.id}`}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] no-underline transition-all duration-200 hover:border-white/10"
                     style={{
-                      color: "#8b98a8",
+                      color: "var(--ai-text-sec)",
                       border: "1px solid transparent",
                     }}
                     onMouseEnter={(e) => {
                       (e.currentTarget as HTMLAnchorElement).style.background =
-                        "#131920";
+                        "var(--ai-card-inner)";
                       (e.currentTarget as HTMLAnchorElement).style.color =
-                        "#e8edf3";
+                        "var(--ai-text)";
                     }}
                     onMouseLeave={(e) => {
                       (e.currentTarget as HTMLAnchorElement).style.background =
                         "transparent";
                       (e.currentTarget as HTMLAnchorElement).style.color =
-                        "#8b98a8";
+                        "var(--ai-text-sec)";
                     }}
                   >
                     <span
@@ -1806,7 +1833,7 @@ export default function AIRoadmapPage() {
                   {/* Phase header */}
                   <div
                     className="flex items-start gap-5 mb-8 pb-6"
-                    style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                    style={{ borderBottom: "1px solid var(--ai-divider)" }}
                   >
                     <div
                       className="font-extrabold leading-none text-right shrink-0 w-[72px]"
@@ -1834,14 +1861,14 @@ export default function AIRoadmapPage() {
                         className="text-2xl lg:text-[28px] font-bold tracking-tight mb-1.5"
                         style={{
                           fontFamily: "'Syne', sans-serif",
-                          color: "#e8edf3",
+                          color: "var(--ai-text)",
                         }}
                       >
                         {phase.title}
                       </h2>
                       <div
                         className="font-mono text-[11px] tracking-[0.08em]"
-                        style={{ color: "#e8edf3" }}
+                        style={{ color: "var(--ai-text)" }}
                       >
                         {phase.timeline}
                       </div>
@@ -1851,9 +1878,9 @@ export default function AIRoadmapPage() {
                             key={t}
                             className="font-mono text-[10px] px-2 py-0.5 rounded"
                             style={{
-                              background: "#131920",
-                              border: "1px solid rgba(255,255,255,0.06)",
-                              color: "#e8edf3",
+                              background: "var(--ai-card-inner)",
+                              border: "1px solid var(--ai-divider)",
+                              color: "var(--ai-text)",
                             }}
                           >
                             {t}
@@ -1868,7 +1895,7 @@ export default function AIRoadmapPage() {
                     className="mb-5 pl-5 text-[13px] leading-[1.75] italic"
                     style={{
                       borderLeft: `2px solid ${phase.color}`,
-                      color: "#8b98a8",
+                      color: "var(--ai-text-sec)",
                     }}
                   >
                     {phase.problem.split("\n").map((line, i) => (
@@ -1880,15 +1907,15 @@ export default function AIRoadmapPage() {
                   <div
                     className="rounded-xl overflow-hidden mb-4"
                     style={{
-                      background: "#161d27",
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "var(--ai-section-bg)",
+                      border: "1px solid var(--ai-divider)",
                     }}
                   >
                     <div
                       className="flex items-center gap-3.5 px-6 py-4"
                       style={{
-                        background: "#131920",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "var(--ai-card-inner)",
+                        borderBottom: "1px solid var(--ai-divider)",
                       }}
                     >
                       <div
@@ -1900,7 +1927,7 @@ export default function AIRoadmapPage() {
                       <div>
                         <span
                           className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
-                          style={{ color: "#4a5568" }}
+                          style={{ color: "var(--ai-text-muted)" }}
                         >
                           Section A
                         </span>
@@ -1908,7 +1935,7 @@ export default function AIRoadmapPage() {
                           className="font-semibold text-[15px]"
                           style={{
                             fontFamily: "'Syne', sans-serif",
-                            color: "#e8edf3",
+                            color: "var(--ai-text)",
                           }}
                         >
                           Core Concepts — The &quot;What&quot;
@@ -1924,7 +1951,7 @@ export default function AIRoadmapPage() {
                             style={{
                               borderBottom:
                                 i < phase.concepts.length - 1
-                                  ? "1px solid rgba(255,255,255,0.06)"
+                                  ? "1px solid var(--ai-divider)"
                                   : "none",
                             }}
                           >
@@ -1934,13 +1961,13 @@ export default function AIRoadmapPage() {
                             />
                             <span
                               className="font-mono text-[12px] font-medium min-w-[140px] shrink-0"
-                              style={{ color: "#e8edf3" }}
+                              style={{ color: "var(--ai-text)" }}
                             >
                               {c.name}
                             </span>
                             <span
                               className="leading-[1.6]"
-                              style={{ color: "#8b98a8" }}
+                              style={{ color: "var(--ai-text-sec)" }}
                             >
                               {c.why}
                             </span>
@@ -1954,15 +1981,15 @@ export default function AIRoadmapPage() {
                   <div
                     className="rounded-xl overflow-hidden mb-4"
                     style={{
-                      background: "#161d27",
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "var(--ai-section-bg)",
+                      border: "1px solid var(--ai-divider)",
                     }}
                   >
                     <div
                       className="flex items-center gap-3.5 px-6 py-4"
                       style={{
-                        background: "#131920",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "var(--ai-card-inner)",
+                        borderBottom: "1px solid var(--ai-divider)",
                       }}
                     >
                       <div
@@ -1974,7 +2001,7 @@ export default function AIRoadmapPage() {
                       <div>
                         <span
                           className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
-                          style={{ color: "#4a5568" }}
+                          style={{ color: "var(--ai-text-muted)" }}
                         >
                           Section B
                         </span>
@@ -1982,7 +2009,7 @@ export default function AIRoadmapPage() {
                           className="font-semibold text-[15px]"
                           style={{
                             fontFamily: "'Syne', sans-serif",
-                            color: "#e8edf3",
+                            color: "var(--ai-text)",
                           }}
                         >
                           Practical Proficiency — {phase.questions.length} Key
@@ -2000,14 +2027,14 @@ export default function AIRoadmapPage() {
                               counterIncrement: "q",
                               borderBottom:
                                 i < phase.questions.length - 1
-                                  ? "1px solid rgba(255,255,255,0.06)"
+                                  ? "1px solid var(--ai-divider)"
                                   : "none",
-                              color: "#8b98a8",
+                              color: "var(--ai-text-sec)",
                             }}
                           >
                             <span
                               className="font-mono text-[10px] font-medium shrink-0 mt-0.5 min-w-6"
-                              style={{ color: "#4a5568" }}
+                              style={{ color: "var(--ai-text-muted)" }}
                             >
                               {String(i + 1).padStart(2, "0")}
                             </span>
@@ -2022,15 +2049,15 @@ export default function AIRoadmapPage() {
                   <div
                     className="rounded-xl overflow-hidden mb-4"
                     style={{
-                      background: "#161d27",
-                      border: "1px solid rgba(255,255,255,0.06)",
+                      background: "var(--ai-section-bg)",
+                      border: "1px solid var(--ai-divider)",
                     }}
                   >
                     <div
                       className="flex items-center gap-3.5 px-6 py-4"
                       style={{
-                        background: "#131920",
-                        borderBottom: "1px solid rgba(255,255,255,0.06)",
+                        background: "var(--ai-card-inner)",
+                        borderBottom: "1px solid var(--ai-divider)",
                       }}
                     >
                       <div
@@ -2042,7 +2069,7 @@ export default function AIRoadmapPage() {
                       <div>
                         <span
                           className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
-                          style={{ color: "#4a5568" }}
+                          style={{ color: "var(--ai-text-muted)" }}
                         >
                           Section C
                         </span>
@@ -2050,7 +2077,7 @@ export default function AIRoadmapPage() {
                           className="font-semibold text-[15px]"
                           style={{
                             fontFamily: "'Syne', sans-serif",
-                            color: "#e8edf3",
+                            color: "var(--ai-text)",
                           }}
                         >
                           Portfolio-Ready Projects — Prove It
@@ -2070,8 +2097,8 @@ export default function AIRoadmapPage() {
                             key={proj.num}
                             className="rounded-[10px] p-[18px] relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
                             style={{
-                              background: "#131920",
-                              border: "1px solid rgba(255,255,255,0.06)",
+                              background: "var(--ai-card-inner)",
+                              border: "1px solid var(--ai-divider)",
                             }}
                             onMouseEnter={(e) => {
                               (
@@ -2081,7 +2108,7 @@ export default function AIRoadmapPage() {
                             onMouseLeave={(e) => {
                               (
                                 e.currentTarget as HTMLDivElement
-                              ).style.borderColor = "rgba(255,255,255,0.06)";
+                              ).style.borderColor = "var(--ai-divider)";
                             }}
                           >
                             <div
@@ -2090,7 +2117,7 @@ export default function AIRoadmapPage() {
                             />
                             <div
                               className="font-mono text-[10px] mb-2.5 tracking-[0.1em]"
-                              style={{ color: "#4a5568" }}
+                              style={{ color: "var(--ai-text-muted)" }}
                             >
                               {proj.num}
                             </div>
@@ -2098,14 +2125,14 @@ export default function AIRoadmapPage() {
                               className="text-[14px] font-bold mb-2 leading-tight"
                               style={{
                                 fontFamily: "'Syne', sans-serif",
-                                color: "#e8edf3",
+                                color: "var(--ai-text)",
                               }}
                             >
                               {proj.name}
                             </div>
                             <p
                               className="text-[12.5px] leading-[1.6] mb-2.5"
-                              style={{ color: "#8b98a8" }}
+                              style={{ color: "var(--ai-text-sec)" }}
                             >
                               {proj.desc}
                             </p>
@@ -2134,8 +2161,8 @@ export default function AIRoadmapPage() {
                     className="rounded-xl p-6 relative overflow-hidden"
                     style={{
                       background:
-                        "linear-gradient(135deg, #131920 0%, #161d27 100%)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                        "linear-gradient(135deg, var(--ai-card-inner) 0%, var(--ai-section-bg) 100%)",
+                      border: "1px solid var(--ai-divider)",
                     }}
                   >
                     <div
@@ -2154,7 +2181,7 @@ export default function AIRoadmapPage() {
                     </div>
                     <p
                       className="text-sm leading-[1.85] mb-3.5"
-                      style={{ color: "#8b98a8" }}
+                      style={{ color: "var(--ai-text-sec)" }}
                     >
                       <RichText
                         text={phase.summary.intro}
@@ -2167,8 +2194,8 @@ export default function AIRoadmapPage() {
                           key={step.num}
                           className="flex gap-3 py-1.5 text-[13px] leading-[1.6]"
                           style={{
-                            color: "#8b98a8",
-                            borderBottom: "1px solid rgba(255,255,255,0.06)",
+                            color: "var(--ai-text-sec)",
+                            borderBottom: "1px solid var(--ai-divider)",
                           }}
                         >
                           <span
@@ -2201,9 +2228,9 @@ export default function AIRoadmapPage() {
                           key={r.name}
                           className="text-[12px] px-2.5 py-1.5 rounded-md leading-[1.5]"
                           style={{
-                            color: "#8b98a8",
-                            background: "#131920",
-                            border: "1px solid rgba(255,255,255,0.06)",
+                            color: "var(--ai-text-sec)",
+                            background: "var(--ai-card-inner)",
+                            border: "1px solid var(--ai-divider)",
                           }}
                         >
                           <span
@@ -2234,16 +2261,16 @@ export default function AIRoadmapPage() {
                 {pIdx < PHASES.length - 1 && (
                   <div
                     className="flex items-center gap-4 my-16 font-mono text-[10px] tracking-[0.15em]"
-                    style={{ color: "#4a5568" }}
+                    style={{ color: "var(--ai-text-muted)" }}
                   >
                     <span
                       className="flex-1 h-px"
-                      style={{ background: "rgba(255,255,255,0.06)" }}
+                      style={{ background: "var(--ai-divider)" }}
                     />
                     // PHASE {PHASES[pIdx + 1].num}
                     <span
                       className="flex-1 h-px"
-                      style={{ background: "rgba(255,255,255,0.06)" }}
+                      style={{ background: "var(--ai-divider)" }}
                     />
                   </div>
                 )}
@@ -2253,11 +2280,11 @@ export default function AIRoadmapPage() {
             {/* ── FOOTER ── */}
             <footer
               className="py-10 mt-16 text-center"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ borderTop: "1px solid var(--ai-divider)" }}
             >
               <p
                 className="font-mono text-[11px] tracking-[0.1em]"
-                style={{ color: "#4a5568" }}
+                style={{ color: "var(--ai-text-muted)" }}
               >
                 {SITE.footer}
               </p>
@@ -2266,5 +2293,6 @@ export default function AIRoadmapPage() {
         </main>
       </div>
     </div>
+    </>
   );
 }

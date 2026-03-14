@@ -272,6 +272,39 @@ const css = `
     .be-qwrap { grid-template-columns:1fr; }
     .be-q-sidebar { display:none; }
   }
+
+  /* ── Dark-mode overrides ── */
+  .dark .be-wrap {
+    --cream: #131920;
+    --cream2: #1a2028;
+    --ink: #e2ddd5;
+    --slate: #94a3b8;
+    --muted: #9ca3af;
+    --rule: #2e3440;
+    --teal: #2dd4bf;
+    --rust: #f59e0b;
+    --rose: #fb7185;
+  }
+  /* Keep cover & footer in their original dramatic dark palette */
+  .dark .be-cover,
+  .dark .be-footer {
+    --cream: #f7f3ec;
+    --ink: #1c1917;
+    --rust: #b45309;
+  }
+  .dark .be-q-answer { color: #c5c0b9; }
+  .dark .be-q-answer code { color: var(--teal); }
+  .dark .be-note { background: rgba(15,118,110,0.15); color: #5eead4; }
+  .dark .be-note strong { color: #2dd4bf; }
+  .dark .be-note.be-warn { background: rgba(180,83,9,0.15); color: #fbbf24; }
+  .dark .be-note.be-warn strong { color: #f59e0b; }
+  .dark .be-cat-api   { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .dark .be-cat-db    { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .dark .be-cat-auth  { background: rgba(234,179,8,0.15); color: #facc15; }
+  .dark .be-cat-arch  { background: rgba(236,72,153,0.15); color: #f472b6; }
+  .dark .be-cat-perf  { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .dark .be-cat-sec   { background: rgba(239,68,68,0.15); color: #f87171; }
+
   @media print {
     .be-cover, .be-qwrap, .be-cb, .be-note { page-break-inside:avoid; }
     pre { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
