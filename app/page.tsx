@@ -102,6 +102,16 @@ const STUDY_GUIDE_LINKS: { label: string; href: string; description: string }[] 
     href: "/static/ai-engineering-roadmap",
     description: "7-Phase · 1-Month Sprint to Job-Ready AI/ML Engineering",
   },
+  {
+    label: "Docker & Containerization",
+    href: "/static/docker-containerization-guide",
+    description: "35 Q&A · 12 Scenarios · Source of Truth for DevOps Engineers",
+  },
+  {
+    label: "Two-Path AI & Data Roadmap",
+    href: "/static/two-path-roadmap",
+    description: "Data Domain vs AI Engineering — Structured Career Guide",
+  },
 ];
 
 const DYNAMIC_LINKS = [
@@ -508,28 +518,22 @@ export default function LandingPage() {
                   onClick={() => setStudyGuideOpen(false)}
                   style={{
                     display: "block",
-                    padding: "10px 14px",
+                    padding: "7px 14px",
                     textDecoration: "none",
                     borderBottom: "1px solid var(--border-subtle)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   <div
                     style={{
-                      fontSize: "13.5px",
-                      fontWeight: 600,
+                      fontSize: "13px",
+                      fontWeight: 500,
                       color: "var(--text-primary)",
                     }}
                   >
                     {item.label}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "var(--text-muted)",
-                      marginTop: "2px",
-                    }}
-                  >
-                    {item.description}
                   </div>
                 </Link>
               ))}
