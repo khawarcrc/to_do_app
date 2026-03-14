@@ -1,4 +1,4 @@
-import StaticNavBar from '@/components/StaticNavBar';
+import MainNav from '@/components/MainNav';
 
 export default function StaticLayout({
   children,
@@ -7,7 +7,7 @@ export default function StaticLayout({
 }) {
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <StaticNavBar />
+      <MainNav />
       <div className="flex-1 overflow-y-auto" data-static-scroll>
         {children}
       </div>
