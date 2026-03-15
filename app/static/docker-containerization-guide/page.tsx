@@ -1431,6 +1431,8 @@ export default function DockerGuide() {
   const qaBySection = (id: string) => QA_DATA.filter((q) => q.category === id);
 
   return (
+    <>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');`}</style>
     <div
       className="min-h-screen transition-colors duration-300"
       style={{
@@ -2077,5 +2079,6 @@ export default function DockerGuide() {
         </main>
       </div>
     </div>
+    </>
   );
 }
