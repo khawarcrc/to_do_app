@@ -6,9 +6,12 @@ import { useState, useRef, useEffect } from 'react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const STUDY_GUIDES = [
-  { label: 'AI Engineering Roadmap', href: '/static/ai-engineering-roadmap' },
-  { label: 'Docker & Containerization', href: '/static/docker-containerization-guide' },
-  { label: 'Two-Path AI & Data Roadmap', href: '/static/two-path-roadmap' },
+  { label: 'Docker & Containerization', href: '/study-guide/docker-containerization-guide' },
+];
+
+const ROADMAPS = [
+  { label: 'AI Engineering Roadmap', href: '/roadmap/ai-engineering-roadmap' },
+  { label: 'Two-Path AI & Data Roadmap', href: '/roadmap/two-path-roadmap' },
 ];
 
 const INTERVIEW_GUIDES = [
@@ -20,13 +23,16 @@ const INTERVIEW_GUIDES = [
 export default function StaticNavBar() {
   const pathname = usePathname();
   const [studyOpen, setStudyOpen] = useState(false);
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const studyRef = useRef<HTMLDivElement>(null);
+  const roadmapRef = useRef<HTMLDivElement>(null);
   const interviewRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (studyRef.current && !studyRef.current.contains(e.target as Node)) setStudyOpen(false);
+      if (roadmapRef.current && !roadmapRef.current.contains(e.target as Node)) setRoadmapOpen(false);
       if (interviewRef.current && !interviewRef.current.contains(e.target as Node)) setInterviewOpen(false);
     };
     document.addEventListener('mousedown', handler);
@@ -66,7 +72,7 @@ export default function StaticNavBar() {
       {/* Study Guide dropdown */}
       <div ref={studyRef} className="relative">
         <button
-          onClick={() => { setStudyOpen(v => !v); setInterviewOpen(false); }}
+          onClick={() => { setStudyOpen(v => !v); setRoadmapOpen(false); setInterviewOpen(false); }}
           className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
             studyOpen ? 'bg-[var(--bg-hover)]' : 'hover:bg-[var(--bg-hover)]'
           }`}
@@ -104,7 +110,7 @@ export default function StaticNavBar() {
       {/* Interview Guides dropdown */}
       <div ref={interviewRef} className="relative">
         <button
-          onClick={() => { setInterviewOpen(v => !v); setStudyOpen(false); }}
+          onClick={() => { setInterviewOpen(v => !v); setStudyOpen(false); setRoadmapOpen(false); }}
           className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
             interviewOpen ? 'bg-[var(--bg-hover)]' : 'hover:bg-[var(--bg-hover)]'
           }`}
@@ -129,6 +135,44 @@ export default function StaticNavBar() {
                 key={p.href}
                 href={p.href}
                 onClick={() => setInterviewOpen(false)}
+                className="block px-3 py-1.5 text-[13px] font-medium truncate hover:bg-[var(--bg-hover)] transition-colors"
+                style={{ color: pathname === p.href ? 'var(--accent)' : 'var(--text-primary)' }}
+              >
+                {p.label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Roadmap dropdown */}
+      <div ref={roadmapRef} className="relative">
+        <button
+          onClick={() => { setRoadmapOpen(v => !v); setStudyOpen(false); setInterviewOpen(false); }}
+          className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+            roadmapOpen ? 'bg-[var(--bg-hover)]' : 'hover:bg-[var(--bg-hover)]'
+          }`}
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          <span className="hidden sm:inline">Roadmap</span>
+          <svg className={`w-3 h-3 transition-transform ${roadmapOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {roadmapOpen && (
+          <div
+            className="absolute top-full left-0 mt-1 w-60 rounded-lg border py-1 shadow-lg"
+            style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}
+          >
+            {ROADMAPS.map((p) => (
+              <Link
+                key={p.href}
+                href={p.href}
+                onClick={() => setRoadmapOpen(false)}
                 className="block px-3 py-1.5 text-[13px] font-medium truncate hover:bg-[var(--bg-hover)] transition-colors"
                 style={{ color: pathname === p.href ? 'var(--accent)' : 'var(--text-primary)' }}
               >

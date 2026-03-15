@@ -19,9 +19,12 @@ const INTERVIEW_LINKS = [
 ];
 
 const STUDY_GUIDE_LINKS = [
-  { label: 'AI Engineering Roadmap', href: '/static/ai-engineering-roadmap', description: '7-Phase · 1-Month Sprint to Job-Ready AI/ML Engineering' },
-  { label: 'Docker & Containerization', href: '/static/docker-containerization-guide', description: '35 Q&A · 12 Scenarios · Source of Truth for DevOps Engineers' },
-  { label: 'Two-Path AI & Data Roadmap', href: '/static/two-path-roadmap', description: 'Data Domain vs AI Engineering — Structured Career Guide' },
+  { label: 'Docker & Containerization', href: '/study-guide/docker-containerization-guide', description: '35 Q&A · 12 Scenarios · Source of Truth for DevOps Engineers' },
+];
+
+const ROADMAP_LINKS = [
+  { label: 'AI Engineering Roadmap', href: '/roadmap/ai-engineering-roadmap', description: '7-Phase · 1-Month Sprint to Job-Ready AI/ML Engineering' },
+  { label: 'Two-Path AI & Data Roadmap', href: '/roadmap/two-path-roadmap', description: 'Data Domain vs AI Engineering — Structured Career Guide' },
 ];
 
 const DYNAMIC_LINKS = [
@@ -106,6 +109,7 @@ export default function MainNav() {
   const [mounted, setMounted] = useState(false);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [studyGuideOpen, setStudyGuideOpen] = useState(false);
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [dynamicOpen, setDynamicOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -158,7 +162,7 @@ export default function MainNav() {
           <NavDropdown
             label="Static"
             open={interviewOpen}
-            onToggle={() => { setInterviewOpen(p => !p); setStudyGuideOpen(false); setDynamicOpen(false); }}
+            onToggle={() => { setInterviewOpen(p => !p); setStudyGuideOpen(false); setRoadmapOpen(false); setDynamicOpen(false); }}
             onClose={() => setInterviewOpen(false)}
           >
             {INTERVIEW_LINKS.map((item) => (
@@ -175,11 +179,27 @@ export default function MainNav() {
             label="Study Guide"
             badge={`${STUDY_GUIDE_LINKS.length}`}
             open={studyGuideOpen}
-            onToggle={() => { setStudyGuideOpen(p => !p); setInterviewOpen(false); setDynamicOpen(false); }}
+            onToggle={() => { setStudyGuideOpen(p => !p); setInterviewOpen(false); setRoadmapOpen(false); setDynamicOpen(false); }}
             onClose={() => setStudyGuideOpen(false)}
           >
             {STUDY_GUIDE_LINKS.map((item) => (
               <Link key={item.href} href={item.href} onClick={() => setStudyGuideOpen(false)}
+                style={{ display: 'block', padding: '7px 14px', textDecoration: 'none', borderBottom: '1px solid var(--border-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontSize: '13px', fontWeight: 500, color: pathname === item.href ? 'var(--accent)' : 'var(--text-primary)' }}>{item.label}</div>
+              </Link>
+            ))}
+          </NavDropdown>
+
+          {/* Roadmap dropdown */}
+          <NavDropdown
+            label="Roadmap"
+            badge={`${ROADMAP_LINKS.length}`}
+            open={roadmapOpen}
+            onToggle={() => { setRoadmapOpen(p => !p); setInterviewOpen(false); setStudyGuideOpen(false); setDynamicOpen(false); }}
+            onClose={() => setRoadmapOpen(false)}
+          >
+            {ROADMAP_LINKS.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setRoadmapOpen(false)}
                 style={{ display: 'block', padding: '7px 14px', textDecoration: 'none', borderBottom: '1px solid var(--border-subtle)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 <div style={{ fontSize: '13px', fontWeight: 500, color: pathname === item.href ? 'var(--accent)' : 'var(--text-primary)' }}>{item.label}</div>
               </Link>
@@ -191,7 +211,7 @@ export default function MainNav() {
             label="Dynamic"
             badge={`${DYNAMIC_LINKS.length}`}
             open={dynamicOpen}
-            onToggle={() => { setDynamicOpen(p => !p); setInterviewOpen(false); setStudyGuideOpen(false); }}
+            onToggle={() => { setDynamicOpen(p => !p); setInterviewOpen(false); setStudyGuideOpen(false); setRoadmapOpen(false); }}
             onClose={() => setDynamicOpen(false)}
           >
             <div style={{ padding: '6px' }}>
@@ -317,6 +337,17 @@ export default function MainNav() {
           {/* Study Guide section */}
           <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '2px 8px 4px' }}>Study Guide</div>
           {STUDY_GUIDE_LINKS.map((item) => (
+            <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}
+              style={{ display: 'block', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: pathname === item.href ? 'var(--accent)' : 'var(--text-primary)', fontSize: '14px', fontWeight: 500 }}>
+              {item.label}
+            </Link>
+          ))}
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-subtle)', margin: '6px 0' }} />
+
+          {/* Roadmap section */}
+          <div style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)', padding: '2px 8px 4px' }}>Roadmap</div>
+          {ROADMAP_LINKS.map((item) => (
             <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}
               style={{ display: 'block', padding: '10px', borderRadius: '8px', textDecoration: 'none', color: pathname === item.href ? 'var(--accent)' : 'var(--text-primary)', fontSize: '14px', fontWeight: 500 }}>
               {item.label}

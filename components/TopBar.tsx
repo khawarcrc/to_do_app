@@ -26,16 +26,19 @@ const STATIC_PAGES = [
 
 const STUDY_GUIDE_PAGES = [
   {
-    label: 'AI Engineering Roadmap',
-    href: '/static/ai-engineering-roadmap',
-  },
-  {
     label: 'Docker & Containerization',
-    href: '/static/docker-containerization-guide',
+    href: '/study-guide/docker-containerization-guide',
+  },
+];
+
+const ROADMAP_PAGES = [
+  {
+    label: 'AI Engineering Roadmap',
+    href: '/roadmap/ai-engineering-roadmap',
   },
   {
     label: 'Two-Path AI & Data Roadmap',
-    href: '/static/two-path-roadmap',
+    href: '/roadmap/two-path-roadmap',
   },
 ];
 
@@ -94,12 +97,18 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
   const studyGuideBtnRef = useRef<HTMLButtonElement>(null);
   const [studyGuideDropdownPos, setStudyGuideDropdownPos] = useState({ top: 0, left: 0 });
 
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
+  const roadmapRef = useRef<HTMLDivElement>(null);
+  const roadmapBtnRef = useRef<HTMLButtonElement>(null);
+  const [roadmapDropdownPos, setRoadmapDropdownPos] = useState({ top: 0, left: 0 });
+
   function openDropdown() {
     if (btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect();
       setDropdownPos({ top: rect.bottom + 4, left: rect.left });
     }
     setStudyGuideOpen(false);
+    setRoadmapOpen(false);
     setStaticOpen((o) => !o);
   }
 
@@ -109,7 +118,18 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
       setStudyGuideDropdownPos({ top: rect.bottom + 4, left: rect.left });
     }
     setStaticOpen(false);
+    setRoadmapOpen(false);
     setStudyGuideOpen((o) => !o);
+  }
+
+  function openRoadmapDropdown() {
+    if (roadmapBtnRef.current) {
+      const rect = roadmapBtnRef.current.getBoundingClientRect();
+      setRoadmapDropdownPos({ top: rect.bottom + 4, left: rect.left });
+    }
+    setStaticOpen(false);
+    setStudyGuideOpen(false);
+    setRoadmapOpen((o) => !o);
   }
 
   useEffect(() => {
@@ -119,6 +139,9 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
       }
       if (studyGuideRef.current && !studyGuideRef.current.contains(e.target as Node)) {
         setStudyGuideOpen(false);
+      }
+      if (roadmapRef.current && !roadmapRef.current.contains(e.target as Node)) {
+        setRoadmapOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClick);
@@ -231,6 +254,63 @@ export default function TopBar({ view, onViewChange, onNewTask, onCommandPalette
                 key={page.href}
                 href={page.href}
                 onClick={() => setStudyGuideOpen(false)}
+                style={{ display: 'block', padding: '7px 12px', textDecoration: 'none' }}
+                className="hover:bg-(--bg-hover)"
+              >
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {page.label}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Roadmap dropdown */}
+      <div ref={roadmapRef} className="relative">
+        <button
+          ref={roadmapBtnRef}
+          onClick={openRoadmapDropdown}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            roadmapOpen
+              ? 'bg-(--bg-hover) text-foreground'
+              : 'text-(--text-secondary) hover:bg-(--bg-hover) hover:text-foreground'
+          }`}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          <span className="hidden sm:inline">Roadmap</span>
+          <svg className={`w-3 h-3 transition-transform ${roadmapOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {roadmapOpen && (
+          <div
+            className="fixed w-72 rounded-lg border z-9999"
+            style={{
+              top: roadmapDropdownPos.top,
+              left: roadmapDropdownPos.left,
+              backgroundColor: 'var(--bg-surface)',
+              borderColor: 'var(--border-default)',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div
+              className="px-3 py-2"
+              style={{ borderBottom: '1px solid var(--border-default)' }}
+            >
+              <p style={{ fontSize: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', margin: 0 }}>
+                Roadmaps
+              </p>
+            </div>
+            {ROADMAP_PAGES.map((page) => (
+              <Link
+                key={page.href}
+                href={page.href}
+                onClick={() => setRoadmapOpen(false)}
                 style={{ display: 'block', padding: '7px 12px', textDecoration: 'none' }}
                 className="hover:bg-(--bg-hover)"
               >

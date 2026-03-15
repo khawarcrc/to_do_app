@@ -1457,7 +1457,11 @@ function RichText({ text, color }: { text: string; color: string }) {
     <>
       {parts.map((p, i) =>
         i % 2 === 1 ? (
-          <strong key={i} className="font-medium" style={{ color: "var(--ai-text)" }}>
+          <strong
+            key={i}
+            className="font-medium"
+            style={{ color: "var(--ai-text)" }}
+          >
             {p}
           </strong>
         ) : (
@@ -1518,7 +1522,7 @@ export default function AIRoadmapPage() {
 
   return (
     <>
-    <style>{`
+      <style>{`
       .ai-roadmap {
         --ai-page-bg: #f8fafc;
         --ai-card-bg: #ffffff;
@@ -1544,755 +1548,772 @@ export default function AIRoadmapPage() {
         --ai-overlay: var(--ai-overlay);
       }
     `}</style>
-    <div
-      className="ai-roadmap min-h-screen"
-      style={{
-        background: "var(--ai-page-bg)",
-        color: "var(--ai-text)",
-        fontFamily: "'DM Sans', sans-serif",
-        fontWeight: 300,
-        lineHeight: 1.7,
-        overflow: "clip",
-      }}
-    >
-      {/* Grid background */}
       <div
-        className="fixed inset-0 pointer-events-none z-0"
+        className="ai-roadmap min-h-screen"
         style={{
-          backgroundImage:
-            "linear-gradient(var(--ai-grid) 1px, transparent 1px), linear-gradient(90deg, var(--ai-grid) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
+          background: "var(--ai-page-bg)",
+          color: "var(--ai-text)",
+          fontFamily: "'DM Sans', sans-serif",
+          fontWeight: 300,
+          lineHeight: 1.7,
+          overflow: "clip",
         }}
-      />
-
-      {/* Mobile nav toggle */}
-      {!navOpen && (
-        <button
-          onClick={() => setNavOpen(true)}
-          className="fixed bottom-6 right-6 z-[100] lg:hidden w-11 h-11 rounded-full flex items-center justify-center text-lg shadow-xl"
-          style={{
-            background: "var(--ai-card-inner)",
-            border: "1px solid var(--ai-divider)",
-            color: "var(--ai-text-sec)",
-          }}
-          aria-label="Open navigation"
-        >
-          ☰
-        </button>
-      )}
-      {navOpen && (
+      >
+        {/* Grid background */}
         <div
-          className="fixed inset-0 z-[98] lg:hidden"
-          style={{ background: "var(--ai-overlay)" }}
-          onClick={() => setNavOpen(false)}
-        />
-      )}
-
-      <div className="flex items-start max-w-[1280px] mx-auto relative z-[1]">
-        {/* ── SIDE NAV ── */}
-        <nav
-          className={`fixed lg:sticky top-0 lg:top-6 z-[99] lg:z-auto shrink-0 overflow-y-auto max-h-screen lg:max-h-[calc(100vh-48px)] w-[220px] lg:w-[220px] px-4 py-5 transition-transform duration-200 ${navOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+          className="fixed inset-0 pointer-events-none z-0"
           style={{
-            background: navOpen ? "var(--ai-card-bg)" : "transparent",
-            borderRight: navOpen ? "1px solid var(--ai-divider)" : "none",
-            scrollbarWidth: "none",
+            backgroundImage:
+              "linear-gradient(var(--ai-grid) 1px, transparent 1px), linear-gradient(90deg, var(--ai-grid) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
           }}
-        >
-          <div
-            className="mb-4 pb-2.5 text-[9px] tracking-[0.2em] uppercase font-mono"
+        />
+
+        {/* Mobile nav toggle */}
+        {!navOpen && (
+          <button
+            onClick={() => setNavOpen(true)}
+            className="fixed bottom-6 right-6 z-[100] lg:hidden w-11 h-11 rounded-full flex items-center justify-center text-lg shadow-xl"
             style={{
-              color: "var(--ai-text-muted)",
-              borderBottom: "1px solid var(--ai-divider)",
+              background: "var(--ai-card-inner)",
+              border: "1px solid var(--ai-divider)",
+              color: "var(--ai-text-sec)",
+            }}
+            aria-label="Open navigation"
+          >
+            ☰
+          </button>
+        )}
+        {navOpen && (
+          <div
+            className="fixed inset-0 z-[98] lg:hidden"
+            style={{ background: "var(--ai-overlay)" }}
+            onClick={() => setNavOpen(false)}
+          />
+        )}
+
+        <div className="flex items-start max-w-[1280px] mx-auto relative z-[1]">
+          {/* ── SIDE NAV ── */}
+          <nav
+            className={`fixed lg:sticky top-0 lg:top-6 z-[99] lg:z-auto shrink-0 overflow-y-auto max-h-screen lg:max-h-[calc(100vh-48px)] w-[220px] lg:w-[220px] px-4 py-5 transition-transform duration-200 ${navOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+            style={{
+              background: navOpen ? "var(--ai-card-bg)" : "transparent",
+              borderRight: navOpen ? "1px solid var(--ai-divider)" : "none",
+              scrollbarWidth: "none",
             }}
           >
-            // Phases
-          </div>
-          <ul className="list-none space-y-0.5">
-            {PHASES.map((phase) => {
-              const isActive = activePhase === phase.id;
-              return (
-                <li key={phase.id}>
-                  <a
-                    href={`#${phase.id}`}
-                    onClick={() => setNavOpen(false)}
-                    className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-all duration-200 no-underline"
-                    style={{
-                      color: isActive ? "var(--ai-text)" : "var(--ai-text-muted)",
-                      background: isActive ? "var(--ai-card-inner)" : "transparent",
-                      border: isActive
-                        ? "1px solid var(--ai-divider)"
-                        : "1px solid transparent",
-                    }}
-                  >
-                    <span
-                      className="w-1.5 h-1.5 rounded-full shrink-0 transition-all"
-                      style={{
-                        background: phase.color,
-                        opacity: isActive ? 1 : 0.4,
-                        transform: isActive ? "scale(1.3)" : "scale(1)",
-                      }}
-                    />
-                    <span className="flex-1 leading-tight">
-                      {phase.title
-                        .replace(
-                          "Python Engineering Foundations",
-                          "Python Engineering",
-                        )
-                        .replace(
-                          "Python · Data Science · ML & Deep Learning",
-                          "Data Science & ML",
-                        )
-                        .replace(
-                          "Embeddings, Vectors & Transformers",
-                          "Embeddings & Vectors",
-                        )
-                        .replace(
-                          "LLM APIs, Prompting & Fine-Tuning",
-                          "LLM APIs & Fine-Tuning",
-                        )
-                        .replace(
-                          "RAG Engineering (Full Stack)",
-                          "RAG Engineering",
-                        )
-                        .replace(
-                          "Agents & Multi-Agent Systems",
-                          "Agents & Multi-Agent",
-                        )
-                        .replace(
-                          "Safety, Evals & Production Ops",
-                          "Safety & Prod Ops",
-                        )
-                        .split("·")[0]
-                        .trim()}
-                    </span>
-                    <span
-                      className="font-mono text-[9px] shrink-0"
-                      style={{ color: isActive ? "var(--ai-text-sec)" : "var(--ai-text-muted)" }}
-                    >
-                      {phase.num}
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
-          {/* Progress */}
-          <div
-            className="mt-4 pt-3.5"
-            style={{ borderTop: "1px solid var(--ai-divider)" }}
-          >
             <div
-              className="font-mono text-[9px] tracking-[0.15em] uppercase mb-2"
-              style={{ color: "var(--ai-text-muted)" }}
-            >
-              // Scroll progress
-            </div>
-            <div
-              className="h-[3px] rounded-sm overflow-hidden"
-              style={{ background: "var(--ai-card-inner)" }}
-            >
-              <div
-                className="h-full rounded-sm transition-all"
-                style={{
-                  width: `${scrollPct}%`,
-                  background: "linear-gradient(90deg, #00d4aa, #3b82f6)",
-                }}
-              />
-            </div>
-            <div
-              className="font-mono text-[10px] mt-1.5 text-right"
-              style={{ color: "#00d4aa" }}
-            >
-              {scrollPct}%
-            </div>
-          </div>
-        </nav>
-
-        {/* ── MAIN CONTENT ── */}
-        <main className="flex-1 min-w-0 px-4 lg:px-4">
-          <div className="max-w-[960px] mx-auto px-6">
-            {/* ── HERO ── */}
-            <header className="pt-20 pb-16 relative overflow-hidden">
-              <div
-                className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at center, rgba(0,212,170,0.08) 0%, transparent 70%)",
-                }}
-              />
-              <p
-                className="font-mono text-[11px] font-normal tracking-[0.2em] uppercase mb-5 flex items-center gap-2.5"
-                style={{ color: "#00d4aa" }}
-              >
-                <span
-                  className="inline-block w-6 h-px"
-                  style={{ background: "#00d4aa" }}
-                />
-                {SITE.heroLabel}
-              </p>
-              <h1
-                className="text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight mb-6"
-                style={{ fontFamily: "'Syne', sans-serif", color: "var(--ai-text)" }}
-              >
-                {SITE.heroTitle}
-                <br />
-                <span
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #00d4aa 0%, #3b82f6 100%)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                  }}
-                >
-                  {SITE.heroGradient}
-                </span>
-              </h1>
-              <p
-                className="text-base max-w-[640px] leading-[1.8] mb-10 pl-5"
-                style={{ color: "var(--ai-text-sec)", borderLeft: "2px solid #00d4aa" }}
-              >
-                {SITE.heroIntro}
-              </p>
-              {/* Stack bar */}
-              <div className="flex gap-0.5 rounded-lg overflow-hidden mb-16">
-                {PHASES.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex-1 py-2.5 px-1 text-center font-mono text-[9px] font-medium tracking-[0.05em] uppercase cursor-default transition-all duration-300 hover:flex-[2]"
-                    style={{
-                      background: p.glow,
-                      color: p.color,
-                      borderTop: `2px solid ${p.color}`,
-                    }}
-                  >
-                    P{p.num.replace("0", "")}
-                    <br />
-                    {p.title.split(" ")[0]}
-                  </div>
-                ))}
-              </div>
-            </header>
-
-            {/* ── TOC ── */}
-            <nav
-              className="rounded-xl p-6 mb-16"
+              className="mb-4 pb-2.5 text-[9px] tracking-[0.2em] uppercase font-mono"
               style={{
-                background: "var(--ai-card-bg)",
-                border: "1px solid var(--ai-divider)",
+                color: "var(--ai-text-muted)",
+                borderBottom: "1px solid var(--ai-divider)",
               }}
             >
-              <div
-                className="font-mono text-[10px] tracking-[0.18em] uppercase mb-4"
-                style={{ color: "var(--ai-text-muted)" }}
-              >
-                // Quick Navigation
-              </div>
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-                }}
-              >
-                {PHASES.map((phase) => (
-                  <a
-                    key={phase.id}
-                    href={`#${phase.id}`}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] no-underline transition-all duration-200 hover:border-white/10"
-                    style={{
-                      color: "var(--ai-text-sec)",
-                      border: "1px solid transparent",
-                    }}
-                    onMouseEnter={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.background =
-                        "var(--ai-card-inner)";
-                      (e.currentTarget as HTMLAnchorElement).style.color =
-                        "var(--ai-text)";
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLAnchorElement).style.background =
-                        "transparent";
-                      (e.currentTarget as HTMLAnchorElement).style.color =
-                        "var(--ai-text-sec)";
-                    }}
-                  >
-                    <span
-                      className="w-2 h-2 rounded-full shrink-0"
-                      style={{ background: phase.color }}
-                    />
-                    Phase {phase.num} — {phase.title}
-                  </a>
-                ))}
-              </div>
-            </nav>
-
-            {/* ── PHASES ── */}
-            {PHASES.map((phase, pIdx) => (
-              <div key={phase.id}>
-                <section id={phase.id} className="mb-20">
-                  {/* Phase header */}
-                  <div
-                    className="flex items-start gap-5 mb-8 pb-6"
-                    style={{ borderBottom: "1px solid var(--ai-divider)" }}
-                  >
-                    <div
-                      className="font-extrabold leading-none text-right shrink-0 w-[72px]"
+              // Phases
+            </div>
+            <ul className="list-none space-y-0.5">
+              {PHASES.map((phase) => {
+                const isActive = activePhase === phase.id;
+                return (
+                  <li key={phase.id}>
+                    <a
+                      href={`#${phase.id}`}
+                      onClick={() => setNavOpen(false)}
+                      className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-all duration-200 no-underline"
                       style={{
-                        fontFamily: "'Syne', sans-serif",
-                        fontSize: 64,
-                        opacity: 0.12,
-                        color: phase.color,
+                        color: isActive
+                          ? "var(--ai-text)"
+                          : "var(--ai-text-muted)",
+                        background: isActive
+                          ? "var(--ai-card-inner)"
+                          : "transparent",
+                        border: isActive
+                          ? "1px solid var(--ai-divider)"
+                          : "1px solid transparent",
                       }}
                     >
-                      {phase.num}
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0 transition-all"
+                        style={{
+                          background: phase.color,
+                          opacity: isActive ? 1 : 0.4,
+                          transform: isActive ? "scale(1.3)" : "scale(1)",
+                        }}
+                      />
+                      <span className="flex-1 leading-tight">
+                        {phase.title
+                          .replace(
+                            "Python Engineering Foundations",
+                            "Python Engineering",
+                          )
+                          .replace(
+                            "Python · Data Science · ML & Deep Learning",
+                            "Data Science & ML",
+                          )
+                          .replace(
+                            "Embeddings, Vectors & Transformers",
+                            "Embeddings & Vectors",
+                          )
+                          .replace(
+                            "LLM APIs, Prompting & Fine-Tuning",
+                            "LLM APIs & Fine-Tuning",
+                          )
+                          .replace(
+                            "RAG Engineering (Full Stack)",
+                            "RAG Engineering",
+                          )
+                          .replace(
+                            "Agents & Multi-Agent Systems",
+                            "Agents & Multi-Agent",
+                          )
+                          .replace(
+                            "Safety, Evals & Production Ops",
+                            "Safety & Prod Ops",
+                          )
+                          .split("·")[0]
+                          .trim()}
+                      </span>
+                      <span
+                        className="font-mono text-[9px] shrink-0"
+                        style={{
+                          color: isActive
+                            ? "var(--ai-text-sec)"
+                            : "var(--ai-text-muted)",
+                        }}
+                      >
+                        {phase.num}
+                      </span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+            {/* Progress */}
+            <div
+              className="mt-4 pt-3.5"
+              style={{ borderTop: "1px solid var(--ai-divider)" }}
+            >
+              <div
+                className="font-mono text-[9px] tracking-[0.15em] uppercase mb-2"
+                style={{ color: "var(--ai-text-muted)" }}
+              >
+                // Scroll progress
+              </div>
+              <div
+                className="h-[3px] rounded-sm overflow-hidden"
+                style={{ background: "var(--ai-card-inner)" }}
+              >
+                <div
+                  className="h-full rounded-sm transition-all"
+                  style={{
+                    width: `${scrollPct}%`,
+                    background: "linear-gradient(90deg, #00d4aa, #3b82f6)",
+                  }}
+                />
+              </div>
+              <div
+                className="font-mono text-[10px] mt-1.5 text-right"
+                style={{ color: "#00d4aa" }}
+              >
+                {scrollPct}%
+              </div>
+            </div>
+          </nav>
+
+          {/* ── MAIN CONTENT ── */}
+          <main className="flex-1 min-w-0 px-4 lg:px-4">
+            <div className="max-w-[960px] mx-auto px-6">
+              {/* ── HERO ── */}
+              <header className="pt-20 pb-16 relative overflow-hidden">
+                <div
+                  className="absolute -top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center, rgba(0,212,170,0.08) 0%, transparent 70%)",
+                  }}
+                />
+                <p
+                  className="font-mono text-[11px] font-normal tracking-[0.2em] uppercase mb-5 flex items-center gap-2.5"
+                  style={{ color: "#00d4aa" }}
+                >
+                  <span
+                    className="inline-block w-6 h-px"
+                    style={{ background: "#00d4aa" }}
+                  />
+                  {SITE.heroLabel}
+                </p>
+                <h1
+                  className="text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight mb-6"
+                  style={{
+                    fontFamily: "'Syne', sans-serif",
+                    color: "var(--ai-text)",
+                  }}
+                >
+                  {SITE.heroTitle}
+                  <br />
+                  <span
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #00d4aa 0%, #3b82f6 100%)",
+                      WebkitBackgroundClip: "text",
+                      WebkitTextFillColor: "transparent",
+                      backgroundClip: "text",
+                    }}
+                  >
+                    {SITE.heroGradient}
+                  </span>
+                </h1>
+                <p
+                  className="text-base max-w-[640px] leading-[1.8] mb-10 pl-5"
+                  style={{
+                    color: "var(--ai-text-sec)",
+                    borderLeft: "2px solid #00d4aa",
+                  }}
+                >
+                  {SITE.heroIntro}
+                </p>
+                {/* Stack bar */}
+                <div className="flex gap-0.5 rounded-lg overflow-hidden mb-16">
+                  {PHASES.map((p) => (
+                    <div
+                      key={p.id}
+                      className="flex-1 py-2.5 px-1 text-center font-mono text-[9px] font-medium tracking-[0.05em] uppercase cursor-default transition-all duration-300 hover:flex-[2]"
+                      style={{
+                        background: p.glow,
+                        color: p.color,
+                        borderTop: `2px solid ${p.color}`,
+                      }}
+                    >
+                      P{p.num.replace("0", "")}
+                      <br />
+                      {p.title.split(" ")[0]}
                     </div>
-                    <div className="flex-1">
+                  ))}
+                </div>
+              </header>
+
+              {/* ── TOC ── */}
+              <nav
+                className="rounded-xl p-6 mb-16"
+                style={{
+                  background: "var(--ai-card-bg)",
+                  border: "1px solid var(--ai-divider)",
+                }}
+              >
+                <div
+                  className="font-mono text-[10px] tracking-[0.18em] uppercase mb-4"
+                  style={{ color: "var(--ai-text-muted)" }}
+                >
+                  // Quick Navigation
+                </div>
+                <div
+                  className="grid gap-2"
+                  style={{
+                    gridTemplateColumns:
+                      "repeat(auto-fill, minmax(200px, 1fr))",
+                  }}
+                >
+                  {PHASES.map((phase) => (
+                    <a
+                      key={phase.id}
+                      href={`#${phase.id}`}
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] no-underline transition-all duration-200 hover:border-white/10"
+                      style={{
+                        color: "var(--ai-text-sec)",
+                        border: "1px solid transparent",
+                      }}
+                      onMouseEnter={(e) => {
+                        (
+                          e.currentTarget as HTMLAnchorElement
+                        ).style.background = "var(--ai-card-inner)";
+                        (e.currentTarget as HTMLAnchorElement).style.color =
+                          "var(--ai-text)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (
+                          e.currentTarget as HTMLAnchorElement
+                        ).style.background = "transparent";
+                        (e.currentTarget as HTMLAnchorElement).style.color =
+                          "var(--ai-text-sec)";
+                      }}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ background: phase.color }}
+                      />
+                      Phase {phase.num} — {phase.title}
+                    </a>
+                  ))}
+                </div>
+              </nav>
+
+              {/* ── PHASES ── */}
+              {PHASES.map((phase, pIdx) => (
+                <div key={phase.id}>
+                  <section id={phase.id} className="mb-20">
+                    {/* Phase header */}
+                    <div
+                      className="flex items-start gap-5 mb-8 pb-6"
+                      style={{ borderBottom: "1px solid var(--ai-divider)" }}
+                    >
                       <div
-                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded mb-2 font-mono text-[10px] font-medium tracking-[0.12em] uppercase"
+                        className="font-extrabold leading-none text-right shrink-0 w-[72px]"
+                        style={{
+                          fontFamily: "'Syne', sans-serif",
+                          fontSize: 64,
+                          opacity: 0.12,
+                          color: phase.color,
+                        }}
+                      >
+                        {phase.num}
+                      </div>
+                      <div className="flex-1">
+                        <div
+                          className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded mb-2 font-mono text-[10px] font-medium tracking-[0.12em] uppercase"
+                          style={{
+                            background: phase.glow,
+                            color: phase.color,
+                            border: `1px solid ${phase.border}`,
+                          }}
+                        >
+                          {phase.badge}
+                        </div>
+                        <h2
+                          className="text-2xl lg:text-[28px] font-bold tracking-tight mb-1.5"
+                          style={{
+                            fontFamily: "'Syne', sans-serif",
+                            color: "var(--ai-text)",
+                          }}
+                        >
+                          {phase.title}
+                        </h2>
+                        <div
+                          className="font-mono text-[11px] tracking-[0.08em]"
+                          style={{ color: "var(--ai-text)" }}
+                        >
+                          {phase.timeline}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {phase.tools.map((t) => (
+                            <span
+                              key={t}
+                              className="font-mono text-[10px] px-2 py-0.5 rounded"
+                              style={{
+                                background: "var(--ai-card-inner)",
+                                border: "1px solid var(--ai-divider)",
+                                color: "var(--ai-text)",
+                              }}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Problem statement */}
+                    <div
+                      className="mb-5 pl-5 text-[13px] leading-[1.75] italic"
+                      style={{
+                        borderLeft: `2px solid ${phase.color}`,
+                        color: "var(--ai-text-sec)",
+                      }}
+                    >
+                      {phase.problem.split("\n").map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
+                    </div>
+
+                    {/* Section A — Concepts */}
+                    <div
+                      className="rounded-xl overflow-hidden mb-4"
+                      style={{
+                        background: "var(--ai-section-bg)",
+                        border: "1px solid var(--ai-divider)",
+                      }}
+                    >
+                      <div
+                        className="flex items-center gap-3.5 px-6 py-4"
+                        style={{
+                          background: "var(--ai-card-inner)",
+                          borderBottom: "1px solid var(--ai-divider)",
+                        }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] shrink-0"
+                          style={{ background: phase.glow }}
+                        >
+                          {phase.conceptsIcon}
+                        </div>
+                        <div>
+                          <span
+                            className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
+                            style={{ color: "var(--ai-text-muted)" }}
+                          >
+                            Section A
+                          </span>
+                          <span
+                            className="font-semibold text-[15px]"
+                            style={{
+                              fontFamily: "'Syne', sans-serif",
+                              color: "var(--ai-text)",
+                            }}
+                          >
+                            Core Concepts — The &quot;What&quot;
+                          </span>
+                        </div>
+                      </div>
+                      <div className="px-6 py-5">
+                        <ul className="list-none">
+                          {phase.concepts.map((c, i) => (
+                            <li
+                              key={i}
+                              className="flex gap-3.5 py-2.5 text-sm"
+                              style={{
+                                borderBottom:
+                                  i < phase.concepts.length - 1
+                                    ? "1px solid var(--ai-divider)"
+                                    : "none",
+                              }}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full mt-2 shrink-0"
+                                style={{ background: phase.color }}
+                              />
+                              <span
+                                className="font-mono text-[12px] font-medium min-w-[140px] shrink-0"
+                                style={{ color: "var(--ai-text)" }}
+                              >
+                                {c.name}
+                              </span>
+                              <span
+                                className="leading-[1.6]"
+                                style={{ color: "var(--ai-text-sec)" }}
+                              >
+                                {c.why}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Section B — Questions */}
+                    <div
+                      className="rounded-xl overflow-hidden mb-4"
+                      style={{
+                        background: "var(--ai-section-bg)",
+                        border: "1px solid var(--ai-divider)",
+                      }}
+                    >
+                      <div
+                        className="flex items-center gap-3.5 px-6 py-4"
+                        style={{
+                          background: "var(--ai-card-inner)",
+                          borderBottom: "1px solid var(--ai-divider)",
+                        }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] shrink-0"
+                          style={{ background: phase.glow }}
+                        >
+                          💻
+                        </div>
+                        <div>
+                          <span
+                            className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
+                            style={{ color: "var(--ai-text-muted)" }}
+                          >
+                            Section B
+                          </span>
+                          <span
+                            className="font-semibold text-[15px]"
+                            style={{
+                              fontFamily: "'Syne', sans-serif",
+                              color: "var(--ai-text)",
+                            }}
+                          >
+                            Practical Proficiency — {phase.questions.length} Key
+                            Problems
+                          </span>
+                        </div>
+                      </div>
+                      <div className="px-6 py-5">
+                        <ol className="list-none" style={{ counterReset: "q" }}>
+                          {phase.questions.map((q, i) => (
+                            <li
+                              key={i}
+                              className="flex gap-3.5 py-2.5 text-sm leading-[1.6]"
+                              style={{
+                                counterIncrement: "q",
+                                borderBottom:
+                                  i < phase.questions.length - 1
+                                    ? "1px solid var(--ai-divider)"
+                                    : "none",
+                                color: "var(--ai-text-sec)",
+                              }}
+                            >
+                              <span
+                                className="font-mono text-[10px] font-medium shrink-0 mt-0.5 min-w-6"
+                                style={{ color: "var(--ai-text-muted)" }}
+                              >
+                                {String(i + 1).padStart(2, "0")}
+                              </span>
+                              <span>{q}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    </div>
+
+                    {/* Section C — Projects */}
+                    <div
+                      className="rounded-xl overflow-hidden mb-4"
+                      style={{
+                        background: "var(--ai-section-bg)",
+                        border: "1px solid var(--ai-divider)",
+                      }}
+                    >
+                      <div
+                        className="flex items-center gap-3.5 px-6 py-4"
+                        style={{
+                          background: "var(--ai-card-inner)",
+                          borderBottom: "1px solid var(--ai-divider)",
+                        }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] shrink-0"
+                          style={{ background: phase.glow }}
+                        >
+                          🏗️
+                        </div>
+                        <div>
+                          <span
+                            className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
+                            style={{ color: "var(--ai-text-muted)" }}
+                          >
+                            Section C
+                          </span>
+                          <span
+                            className="font-semibold text-[15px]"
+                            style={{
+                              fontFamily: "'Syne', sans-serif",
+                              color: "var(--ai-text)",
+                            }}
+                          >
+                            Portfolio-Ready Projects — Prove It
+                          </span>
+                        </div>
+                      </div>
+                      <div className="px-6 py-5">
+                        <div
+                          className="grid gap-3"
+                          style={{
+                            gridTemplateColumns:
+                              "repeat(auto-fill, minmax(240px, 1fr))",
+                          }}
+                        >
+                          {phase.projects.map((proj) => (
+                            <div
+                              key={proj.num}
+                              className="rounded-[10px] p-[18px] relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                              style={{
+                                background: "var(--ai-card-inner)",
+                                border: "1px solid var(--ai-divider)",
+                              }}
+                              onMouseEnter={(e) => {
+                                (
+                                  e.currentTarget as HTMLDivElement
+                                ).style.borderColor = phase.border;
+                              }}
+                              onMouseLeave={(e) => {
+                                (
+                                  e.currentTarget as HTMLDivElement
+                                ).style.borderColor = "var(--ai-divider)";
+                              }}
+                            >
+                              <div
+                                className="absolute top-0 left-0 right-0 h-0.5"
+                                style={{ background: phase.color }}
+                              />
+                              <div
+                                className="font-mono text-[10px] mb-2.5 tracking-[0.1em]"
+                                style={{ color: "var(--ai-text-muted)" }}
+                              >
+                                {proj.num}
+                              </div>
+                              <div
+                                className="text-[14px] font-bold mb-2 leading-tight"
+                                style={{
+                                  fontFamily: "'Syne', sans-serif",
+                                  color: "var(--ai-text)",
+                                }}
+                              >
+                                {proj.name}
+                              </div>
+                              <p
+                                className="text-[12.5px] leading-[1.6] mb-2.5"
+                                style={{ color: "var(--ai-text-sec)" }}
+                              >
+                                {proj.desc}
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {proj.tags.map((tag) => (
+                                  <span
+                                    key={tag}
+                                    className="font-mono text-[9px] px-1.5 py-0.5 rounded tracking-[0.04em]"
+                                    style={{
+                                      background: phase.glow,
+                                      color: phase.color,
+                                    }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Phase summary */}
+                    <div
+                      className="rounded-xl p-6 relative overflow-hidden"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, var(--ai-card-inner) 0%, var(--ai-section-bg) 100%)",
+                        border: "1px solid var(--ai-divider)",
+                      }}
+                    >
+                      <div
+                        className="absolute top-0 left-0 right-0 h-0.5"
+                        style={{ background: phase.color }}
+                      />
+                      <div
+                        className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3.5 flex items-center gap-2"
+                        style={{ color: phase.color }}
+                      >
+                        <span
+                          className="inline-block w-4 h-0.5"
+                          style={{ background: phase.color }}
+                        />
+                        {phase.summary.label}
+                      </div>
+                      <p
+                        className="text-sm leading-[1.85] mb-3.5"
+                        style={{ color: "var(--ai-text-sec)" }}
+                      >
+                        <RichText
+                          text={phase.summary.intro}
+                          color={phase.color}
+                        />
+                      </p>
+                      <ul className="list-none mt-3 mb-4">
+                        {phase.summary.steps.map((step) => (
+                          <li
+                            key={step.num}
+                            className="flex gap-3 py-1.5 text-[13px] leading-[1.6]"
+                            style={{
+                              color: "var(--ai-text-sec)",
+                              borderBottom: "1px solid var(--ai-divider)",
+                            }}
+                          >
+                            <span
+                              className="font-mono text-[10px] font-semibold shrink-0 mt-0.5 min-w-[22px]"
+                              style={{ color: phase.color }}
+                            >
+                              {step.num}
+                            </span>
+                            <span>
+                              <RichText text={step.text} color={phase.color} />
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div
+                        className="font-mono text-[10px] tracking-[0.15em] uppercase mt-4 mb-2"
+                        style={{ color: phase.color }}
+                      >
+                        // Learning Resources
+                      </div>
+                      <ul
+                        className="list-none grid gap-1.5"
+                        style={{
+                          gridTemplateColumns:
+                            "repeat(auto-fill, minmax(260px, 1fr))",
+                        }}
+                      >
+                        {phase.summary.resources.map((r) => (
+                          <li
+                            key={r.name}
+                            className="text-[12px] px-2.5 py-1.5 rounded-md leading-[1.5]"
+                            style={{
+                              color: "var(--ai-text-sec)",
+                              background: "var(--ai-card-inner)",
+                              border: "1px solid var(--ai-divider)",
+                            }}
+                          >
+                            <span
+                              className="font-mono text-[11px] font-medium"
+                              style={{ color: phase.color }}
+                            >
+                              {r.name}
+                            </span>
+                            {" — "}
+                            {r.desc}
+                          </li>
+                        ))}
+                      </ul>
+                      <span
+                        className="inline-flex items-center gap-1.5 mt-4 px-3.5 py-1.5 rounded-md font-mono text-[11px] font-medium tracking-[0.06em]"
                         style={{
                           background: phase.glow,
                           color: phase.color,
                           border: `1px solid ${phase.border}`,
                         }}
                       >
-                        {phase.badge}
-                      </div>
-                      <h2
-                        className="text-2xl lg:text-[28px] font-bold tracking-tight mb-1.5"
-                        style={{
-                          fontFamily: "'Syne', sans-serif",
-                          color: "var(--ai-text)",
-                        }}
-                      >
-                        {phase.title}
-                      </h2>
-                      <div
-                        className="font-mono text-[11px] tracking-[0.08em]"
-                        style={{ color: "var(--ai-text)" }}
-                      >
-                        {phase.timeline}
-                      </div>
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {phase.tools.map((t) => (
-                          <span
-                            key={t}
-                            className="font-mono text-[10px] px-2 py-0.5 rounded"
-                            style={{
-                              background: "var(--ai-card-inner)",
-                              border: "1px solid var(--ai-divider)",
-                              color: "var(--ai-text)",
-                            }}
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
+                        {phase.summary.milestone}
+                      </span>
                     </div>
-                  </div>
+                  </section>
 
-                  {/* Problem statement */}
-                  <div
-                    className="mb-5 pl-5 text-[13px] leading-[1.75] italic"
-                    style={{
-                      borderLeft: `2px solid ${phase.color}`,
-                      color: "var(--ai-text-sec)",
-                    }}
-                  >
-                    {phase.problem.split("\n").map((line, i) => (
-                      <p key={i}>{line}</p>
-                    ))}
-                  </div>
-
-                  {/* Section A — Concepts */}
-                  <div
-                    className="rounded-xl overflow-hidden mb-4"
-                    style={{
-                      background: "var(--ai-section-bg)",
-                      border: "1px solid var(--ai-divider)",
-                    }}
-                  >
+                  {/* Divider */}
+                  {pIdx < PHASES.length - 1 && (
                     <div
-                      className="flex items-center gap-3.5 px-6 py-4"
-                      style={{
-                        background: "var(--ai-card-inner)",
-                        borderBottom: "1px solid var(--ai-divider)",
-                      }}
-                    >
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] shrink-0"
-                        style={{ background: phase.glow }}
-                      >
-                        {phase.conceptsIcon}
-                      </div>
-                      <div>
-                        <span
-                          className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
-                          style={{ color: "var(--ai-text-muted)" }}
-                        >
-                          Section A
-                        </span>
-                        <span
-                          className="font-semibold text-[15px]"
-                          style={{
-                            fontFamily: "'Syne', sans-serif",
-                            color: "var(--ai-text)",
-                          }}
-                        >
-                          Core Concepts — The &quot;What&quot;
-                        </span>
-                      </div>
-                    </div>
-                    <div className="px-6 py-5">
-                      <ul className="list-none">
-                        {phase.concepts.map((c, i) => (
-                          <li
-                            key={i}
-                            className="flex gap-3.5 py-2.5 text-sm"
-                            style={{
-                              borderBottom:
-                                i < phase.concepts.length - 1
-                                  ? "1px solid var(--ai-divider)"
-                                  : "none",
-                            }}
-                          >
-                            <span
-                              className="w-1.5 h-1.5 rounded-full mt-2 shrink-0"
-                              style={{ background: phase.color }}
-                            />
-                            <span
-                              className="font-mono text-[12px] font-medium min-w-[140px] shrink-0"
-                              style={{ color: "var(--ai-text)" }}
-                            >
-                              {c.name}
-                            </span>
-                            <span
-                              className="leading-[1.6]"
-                              style={{ color: "var(--ai-text-sec)" }}
-                            >
-                              {c.why}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {/* Section B — Questions */}
-                  <div
-                    className="rounded-xl overflow-hidden mb-4"
-                    style={{
-                      background: "var(--ai-section-bg)",
-                      border: "1px solid var(--ai-divider)",
-                    }}
-                  >
-                    <div
-                      className="flex items-center gap-3.5 px-6 py-4"
-                      style={{
-                        background: "var(--ai-card-inner)",
-                        borderBottom: "1px solid var(--ai-divider)",
-                      }}
-                    >
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] shrink-0"
-                        style={{ background: phase.glow }}
-                      >
-                        💻
-                      </div>
-                      <div>
-                        <span
-                          className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
-                          style={{ color: "var(--ai-text-muted)" }}
-                        >
-                          Section B
-                        </span>
-                        <span
-                          className="font-semibold text-[15px]"
-                          style={{
-                            fontFamily: "'Syne', sans-serif",
-                            color: "var(--ai-text)",
-                          }}
-                        >
-                          Practical Proficiency — {phase.questions.length} Key
-                          Problems
-                        </span>
-                      </div>
-                    </div>
-                    <div className="px-6 py-5">
-                      <ol className="list-none" style={{ counterReset: "q" }}>
-                        {phase.questions.map((q, i) => (
-                          <li
-                            key={i}
-                            className="flex gap-3.5 py-2.5 text-sm leading-[1.6]"
-                            style={{
-                              counterIncrement: "q",
-                              borderBottom:
-                                i < phase.questions.length - 1
-                                  ? "1px solid var(--ai-divider)"
-                                  : "none",
-                              color: "var(--ai-text-sec)",
-                            }}
-                          >
-                            <span
-                              className="font-mono text-[10px] font-medium shrink-0 mt-0.5 min-w-6"
-                              style={{ color: "var(--ai-text-muted)" }}
-                            >
-                              {String(i + 1).padStart(2, "0")}
-                            </span>
-                            <span>{q}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  </div>
-
-                  {/* Section C — Projects */}
-                  <div
-                    className="rounded-xl overflow-hidden mb-4"
-                    style={{
-                      background: "var(--ai-section-bg)",
-                      border: "1px solid var(--ai-divider)",
-                    }}
-                  >
-                    <div
-                      className="flex items-center gap-3.5 px-6 py-4"
-                      style={{
-                        background: "var(--ai-card-inner)",
-                        borderBottom: "1px solid var(--ai-divider)",
-                      }}
-                    >
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-[15px] shrink-0"
-                        style={{ background: phase.glow }}
-                      >
-                        🏗️
-                      </div>
-                      <div>
-                        <span
-                          className="block font-mono text-[10px] tracking-[0.15em] uppercase mb-0.5"
-                          style={{ color: "var(--ai-text-muted)" }}
-                        >
-                          Section C
-                        </span>
-                        <span
-                          className="font-semibold text-[15px]"
-                          style={{
-                            fontFamily: "'Syne', sans-serif",
-                            color: "var(--ai-text)",
-                          }}
-                        >
-                          Portfolio-Ready Projects — Prove It
-                        </span>
-                      </div>
-                    </div>
-                    <div className="px-6 py-5">
-                      <div
-                        className="grid gap-3"
-                        style={{
-                          gridTemplateColumns:
-                            "repeat(auto-fill, minmax(240px, 1fr))",
-                        }}
-                      >
-                        {phase.projects.map((proj) => (
-                          <div
-                            key={proj.num}
-                            className="rounded-[10px] p-[18px] relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
-                            style={{
-                              background: "var(--ai-card-inner)",
-                              border: "1px solid var(--ai-divider)",
-                            }}
-                            onMouseEnter={(e) => {
-                              (
-                                e.currentTarget as HTMLDivElement
-                              ).style.borderColor = phase.border;
-                            }}
-                            onMouseLeave={(e) => {
-                              (
-                                e.currentTarget as HTMLDivElement
-                              ).style.borderColor = "var(--ai-divider)";
-                            }}
-                          >
-                            <div
-                              className="absolute top-0 left-0 right-0 h-0.5"
-                              style={{ background: phase.color }}
-                            />
-                            <div
-                              className="font-mono text-[10px] mb-2.5 tracking-[0.1em]"
-                              style={{ color: "var(--ai-text-muted)" }}
-                            >
-                              {proj.num}
-                            </div>
-                            <div
-                              className="text-[14px] font-bold mb-2 leading-tight"
-                              style={{
-                                fontFamily: "'Syne', sans-serif",
-                                color: "var(--ai-text)",
-                              }}
-                            >
-                              {proj.name}
-                            </div>
-                            <p
-                              className="text-[12.5px] leading-[1.6] mb-2.5"
-                              style={{ color: "var(--ai-text-sec)" }}
-                            >
-                              {proj.desc}
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                              {proj.tags.map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="font-mono text-[9px] px-1.5 py-0.5 rounded tracking-[0.04em]"
-                                  style={{
-                                    background: phase.glow,
-                                    color: phase.color,
-                                  }}
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Phase summary */}
-                  <div
-                    className="rounded-xl p-6 relative overflow-hidden"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, var(--ai-card-inner) 0%, var(--ai-section-bg) 100%)",
-                      border: "1px solid var(--ai-divider)",
-                    }}
-                  >
-                    <div
-                      className="absolute top-0 left-0 right-0 h-0.5"
-                      style={{ background: phase.color }}
-                    />
-                    <div
-                      className="font-mono text-[10px] tracking-[0.18em] uppercase mb-3.5 flex items-center gap-2"
-                      style={{ color: phase.color }}
+                      className="flex items-center gap-4 my-16 font-mono text-[10px] tracking-[0.15em]"
+                      style={{ color: "var(--ai-text-muted)" }}
                     >
                       <span
-                        className="inline-block w-4 h-0.5"
-                        style={{ background: phase.color }}
+                        className="flex-1 h-px"
+                        style={{ background: "var(--ai-divider)" }}
                       />
-                      {phase.summary.label}
-                    </div>
-                    <p
-                      className="text-sm leading-[1.85] mb-3.5"
-                      style={{ color: "var(--ai-text-sec)" }}
-                    >
-                      <RichText
-                        text={phase.summary.intro}
-                        color={phase.color}
+                      // PHASE {PHASES[pIdx + 1].num}
+                      <span
+                        className="flex-1 h-px"
+                        style={{ background: "var(--ai-divider)" }}
                       />
-                    </p>
-                    <ul className="list-none mt-3 mb-4">
-                      {phase.summary.steps.map((step) => (
-                        <li
-                          key={step.num}
-                          className="flex gap-3 py-1.5 text-[13px] leading-[1.6]"
-                          style={{
-                            color: "var(--ai-text-sec)",
-                            borderBottom: "1px solid var(--ai-divider)",
-                          }}
-                        >
-                          <span
-                            className="font-mono text-[10px] font-semibold shrink-0 mt-0.5 min-w-[22px]"
-                            style={{ color: phase.color }}
-                          >
-                            {step.num}
-                          </span>
-                          <span>
-                            <RichText text={step.text} color={phase.color} />
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                    <div
-                      className="font-mono text-[10px] tracking-[0.15em] uppercase mt-4 mb-2"
-                      style={{ color: phase.color }}
-                    >
-                      // Learning Resources
                     </div>
-                    <ul
-                      className="list-none grid gap-1.5"
-                      style={{
-                        gridTemplateColumns:
-                          "repeat(auto-fill, minmax(260px, 1fr))",
-                      }}
-                    >
-                      {phase.summary.resources.map((r) => (
-                        <li
-                          key={r.name}
-                          className="text-[12px] px-2.5 py-1.5 rounded-md leading-[1.5]"
-                          style={{
-                            color: "var(--ai-text-sec)",
-                            background: "var(--ai-card-inner)",
-                            border: "1px solid var(--ai-divider)",
-                          }}
-                        >
-                          <span
-                            className="font-mono text-[11px] font-medium"
-                            style={{ color: phase.color }}
-                          >
-                            {r.name}
-                          </span>
-                          {" — "}
-                          {r.desc}
-                        </li>
-                      ))}
-                    </ul>
-                    <span
-                      className="inline-flex items-center gap-1.5 mt-4 px-3.5 py-1.5 rounded-md font-mono text-[11px] font-medium tracking-[0.06em]"
-                      style={{
-                        background: phase.glow,
-                        color: phase.color,
-                        border: `1px solid ${phase.border}`,
-                      }}
-                    >
-                      {phase.summary.milestone}
-                    </span>
-                  </div>
-                </section>
+                  )}
+                </div>
+              ))}
 
-                {/* Divider */}
-                {pIdx < PHASES.length - 1 && (
-                  <div
-                    className="flex items-center gap-4 my-16 font-mono text-[10px] tracking-[0.15em]"
-                    style={{ color: "var(--ai-text-muted)" }}
-                  >
-                    <span
-                      className="flex-1 h-px"
-                      style={{ background: "var(--ai-divider)" }}
-                    />
-                    // PHASE {PHASES[pIdx + 1].num}
-                    <span
-                      className="flex-1 h-px"
-                      style={{ background: "var(--ai-divider)" }}
-                    />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* ── FOOTER ── */}
-            <footer
-              className="py-10 mt-16 text-center"
-              style={{ borderTop: "1px solid var(--ai-divider)" }}
-            >
-              <p
-                className="font-mono text-[11px] tracking-[0.1em]"
-                style={{ color: "var(--ai-text-muted)" }}
+              {/* ── FOOTER ── */}
+              <footer
+                className="py-10 mt-16 text-center"
+                style={{ borderTop: "1px solid var(--ai-divider)" }}
               >
-                {SITE.footer}
-              </p>
-            </footer>
-          </div>
-        </main>
+                <p
+                  className="font-mono text-[11px] tracking-[0.1em]"
+                  style={{ color: "var(--ai-text-muted)" }}
+                >
+                  {SITE.footer}
+                </p>
+              </footer>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
     </>
   );
 }
