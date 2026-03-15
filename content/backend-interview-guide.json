@@ -1,0 +1,357 @@
+{
+  "cover": {
+    "kicker": "Complete Preparation Guide",
+    "title": ["Back", "end", "Devel­op­ment"],
+    "description": "30 essential questions spanning APIs, databases, authentication, server architecture, and performance optimization — written for developers preparing for their first backend engineering interview.",
+    "pills": ["REST APIs", "SQL & NoSQL", "Auth & JWT", "Caching", "Queues", "Scalability", "Security", "Node.js"],
+    "stats": [
+      { "value": "30", "label": "Questions" },
+      { "value": "6", "label": "Topics" },
+      { "value": "Mid", "label": "Level" }
+    ]
+  },
+  "sections": [
+    {
+      "num": "01 – 05",
+      "title": "APIs & HTTP",
+      "badge": "api design",
+      "questions": [
+        {
+          "id": 1,
+          "question": "What are the main HTTP methods, and what is the difference between PUT and PATCH?",
+          "answer": "HTTP defines a set of request methods that indicate the desired action: `GET` retrieves data without side effects, `POST` creates a new resource, `PUT` replaces an entire resource with the request payload, `DELETE` removes a resource, and `PATCH` applies a partial update to a resource. The key distinction between `PUT` and `PATCH` is completeness — a `PUT` request must include the full representation of the resource, so any field omitted from the body will be cleared or reset to its default; this makes `PUT` idempotent, meaning calling it multiple times produces the same result. `PATCH`, by contrast, only sends the fields that need to change, leaving unmentioned fields untouched, which is more bandwidth-efficient for large resources. In practice, most public APIs use `PATCH` for updates since clients rarely want to replace entire objects. Understanding idempotency is also important for safe retry logic: `GET`, `PUT`, and `DELETE` are all idempotent; `POST` and `PATCH` are not guaranteed to be.",
+          "category": "API",
+          "categoryKey": "api",
+          "codeBlock": {
+            "name": "http-methods.http",
+            "lang": "HTTP",
+            "code": "# PUT — replace entire user object\nPUT /users/42\nContent-Type: application/json\n{ \"name\": \"Alice\", \"email\": \"alice@example.com\", \"role\": \"admin\" }\n\n# PATCH — update only the email field\nPATCH /users/42\nContent-Type: application/json\n{ \"email\": \"newalice@example.com\" }"
+          }
+        },
+        {
+          "id": 2,
+          "question": "What are the core principles of RESTful API design?",
+          "answer": "REST (Representational State Transfer) is an architectural style defined by six constraints: client-server separation, statelessness (the server holds no session state between requests — each request must carry all the information needed to process it), cacheability, a uniform interface, a layered system, and optionally code-on-demand. In practice, the most important principles for everyday API design are statelessness, using nouns not verbs for resource URLs (e.g., `/articles`, not `/getArticles`), mapping CRUD operations to the correct HTTP methods, returning appropriate status codes (201 for creation, 404 for not found, 422 for validation errors), and using consistent, predictable URL naming with plural nouns and nested resources for relationships (`/users/42/posts`). Resources should be designed around the consumer's needs rather than mirroring your database tables one-to-one. Versioning the API in the URL or via a header ensures you can evolve the API without breaking existing clients.",
+          "category": "API",
+          "categoryKey": "api"
+        },
+        {
+          "id": 3,
+          "question": "What are the differences between REST, GraphQL, and gRPC — and when would you choose each?",
+          "answer": "REST uses standard HTTP with resource-based URLs and is the simplest, most universally understood approach — ideal for public APIs, simple CRUD services, and teams that benefit from familiar tooling and HTTP caching. GraphQL allows clients to specify exactly what data they need in a single request, eliminating the over-fetching and under-fetching problems that plague REST (where you often get too much data or must make multiple round-trips); it is ideal for complex frontends with varying data requirements, like mobile apps where bandwidth matters. gRPC uses Protocol Buffers (a binary serialization format) over HTTP/2, giving it exceptional performance and strict, schema-first typing — it is the right choice for internal service-to-service communication in microservices where low latency, bidirectional streaming, and strong contracts are priorities. The tradeoff is that gRPC is harder to debug (binary protocol), not directly accessible from browsers without a proxy, and requires schema tooling. GraphQL adds complexity around caching and authorization that REST handles trivially.",
+          "category": "API",
+          "categoryKey": "api"
+        },
+        {
+          "id": 4,
+          "question": "What are common API versioning strategies, and what are the tradeoffs of each?",
+          "answer": "API versioning ensures you can evolve your API without breaking existing clients. The three main strategies are URL path versioning (`/v1/users`), query parameter versioning (`/users?version=1`), and header-based versioning (`Accept: application/vnd.myapi.v1+json`). URL path versioning is the most explicit and easiest to test and cache — you can navigate directly to a versioned URL in a browser — and it is the most widely adopted approach for public APIs. Header-based versioning is considered more RESTfully pure (the URL identifies the resource, headers describe representation) but is less visible and harder to test without tooling. The key operational tradeoff is how long you maintain old versions — deprecation policies, sunset headers, and migration guides are as important as the technical mechanism. A practical strategy is to version only when making breaking changes (removing fields, changing types, altering semantics) and use non-breaking additions like new optional fields freely without bumping the version.",
+          "category": "API",
+          "categoryKey": "api",
+          "codeBlock": {
+            "name": "versioning.js",
+            "lang": "Node.js",
+            "code": "// Express — URL path versioning\nconst v1 = require('express').Router();\nconst v2 = require('express').Router();\n\nv1.get('/users', userController.listV1);\nv2.get('/users', userController.listV2);\n\napp.use('/api/v1', v1);\napp.use('/api/v2', v2);"
+          }
+        },
+        {
+          "id": 5,
+          "question": "How do you handle request validation and error responses in a backend API?",
+          "answer": "Input validation should happen as early as possible in the request lifecycle — before any database access or business logic — to fail fast and return clear error messages. Use a schema validation library (Zod in Node.js, Pydantic in Python, Joi, etc.) to define the expected shape of every request body, path parameter, and query string; these libraries produce structured, actionable error messages automatically. Error responses should always follow a consistent envelope structure: an HTTP status code that accurately reflects the error category (400 for bad input, 401 for unauthenticated, 403 for forbidden, 404 for not found, 422 for semantically invalid data, 500 for server errors), and a JSON body with at minimum a machine-readable error code and a human-readable message. Never leak internal error details, stack traces, or database messages in production responses — log them server-side instead. A global error-handling middleware (in Express, a 4-argument middleware at the end of the chain) is the clean way to centralize error formatting and logging.",
+          "category": "API",
+          "categoryKey": "api",
+          "codeBlock": {
+            "name": "validation.js",
+            "lang": "Node.js / Zod",
+            "code": "const { z } = require('zod');\n\nconst CreateUserSchema = z.object({\n  name:  z.string().min(2).max(80),\n  email: z.string().email(),\n  age:   z.number().int().min(0).optional(),\n});\n\nasync function createUser(req, res, next) {\n  const result = CreateUserSchema.safeParse(req.body);\n  if (!result.success)\n    return res.status(422).json({\n      error: 'VALIDATION_ERROR',\n      issues: result.error.issues,\n    });\n  // result.data is now safe to use\n}"
+          }
+        }
+      ]
+    },
+    {
+      "num": "06 – 10",
+      "title": "Authentication & Authorization",
+      "badge": "auth",
+      "questions": [
+        {
+          "id": 6,
+          "question": "How should passwords be stored securely, and what makes bcrypt the right choice?",
+          "answer": "Passwords must never be stored in plaintext or using general-purpose hashing algorithms like MD5 or SHA-256, which are designed to be fast and are therefore trivially brute-forced via GPU-accelerated dictionary attacks. The correct approach is to use a purpose-built, slow hashing algorithm: bcrypt, scrypt, or Argon2 (the current winner of the Password Hashing Competition). Bcrypt's key feature is its configurable \"cost factor\" (or work factor) — increasing it by 1 doubles the computation time, allowing you to keep pace with improving hardware by adjusting the cost without rehashing existing passwords. It also automatically generates and embeds a unique random salt in each hash, meaning two users with the same password produce entirely different hashes, defeating rainbow table attacks. The recommended minimum cost factor for bcrypt today is 12; you verify a login attempt by hashing the submitted password with the stored salt and comparing the result to the stored hash, never decrypting it.",
+          "category": "Auth",
+          "categoryKey": "auth",
+          "codeBlock": {
+            "name": "password.js",
+            "lang": "Node.js / bcrypt",
+            "code": "const bcrypt = require('bcrypt');\nconst ROUNDS = 12;\n\n// Hash on registration\nasync function hashPassword(plain) {\n  return bcrypt.hash(plain, ROUNDS);\n}\n\n// Verify on login\nasync function verifyPassword(plain, hash) {\n  return bcrypt.compare(plain, hash); // returns boolean\n}"
+          }
+        },
+        {
+          "id": 7,
+          "question": "How do JSON Web Tokens (JWTs) work, and what are their security considerations?",
+          "answer": "A JWT is a compact, self-contained token with three base64url-encoded parts separated by dots: a header (algorithm and token type), a payload (claims — user ID, roles, expiry), and a signature computed by the server using a secret key. Because the payload is only encoded not encrypted, anyone can read the claims — you should never put sensitive data like passwords in a JWT. The server validates a token by recomputing the signature and comparing; if it matches, the claims are trusted. The main security considerations are: always set a short expiry (`exp` claim, typically 15 minutes for access tokens); use asymmetric keys (RS256) if multiple services need to verify tokens without sharing a secret; and never store JWTs in `localStorage` — store access tokens in memory and refresh tokens in `HttpOnly` cookies to protect against XSS. The biggest weakness of JWTs is that they cannot be invalidated before expiry without a server-side denylist, which partially negates their stateless advantage.",
+          "category": "Auth",
+          "categoryKey": "auth",
+          "codeBlock": {
+            "name": "jwt.js",
+            "lang": "Node.js",
+            "code": "const jwt = require('jsonwebtoken');\n\nconst signToken = (userId, role) =>\n  jwt.sign({ sub: userId, role }, process.env.JWT_SECRET, {\n    algorithm: 'HS256',\n    expiresIn:  '15m',\n  });\n\nconst verifyToken = (token) =>\n  jwt.verify(token, process.env.JWT_SECRET); // throws on invalid"
+          }
+        },
+        {
+          "id": 8,
+          "question": "What is OAuth 2.0, and how does it differ from OpenID Connect?",
+          "answer": "OAuth 2.0 is an authorization framework — it defines how a third-party application can obtain limited access to a user's resources on another service (e.g., a fitness app reading your Google Calendar) without ever handling the user's credentials. It works by issuing access tokens through defined \"grant flows,\" the most common being the Authorization Code Flow, where the user authenticates with the provider, the provider redirects back with a code, and the app exchanges that code for an access token. OAuth 2.0 answers \"what can this app do on your behalf?\" but says nothing about who the user is — it is purely about authorization. OpenID Connect (OIDC) is an identity layer built on top of OAuth 2.0 that adds an ID token (a JWT containing the user's identity claims: name, email, profile picture) and a `/userinfo` endpoint, answering \"who is this user?\" This is why modern \"Sign in with Google\" buttons use OIDC, not raw OAuth 2.0. When building backends that delegate authentication to an identity provider, you implement OIDC; when building a third-party integration that accesses another service's API, you use OAuth 2.0.",
+          "category": "Auth",
+          "categoryKey": "auth"
+        },
+        {
+          "id": 9,
+          "question": "What is the difference between session-based and token-based authentication, and when would you use each?",
+          "answer": "In session-based authentication, the server creates a session record (stored in memory or a database like Redis) after login, sends a session ID to the client in a cookie, and looks up that session on every subsequent request — the server holds state. In token-based authentication (typically JWT), the server issues a signed token containing all necessary claims and stores nothing; every request presents the token, and the server validates the signature. Session-based auth is simpler to implement instant revocation (delete the session record), works well for traditional server-rendered web apps, and is naturally scope-limited to a single domain's cookies. Token-based auth is stateless and scales horizontally without a shared session store, making it well-suited for microservices and mobile/SPA clients — but revocation requires an additional mechanism like a denylist or short expiry with refresh tokens. For a traditional web application with a single backend, sessions are often the simpler, more secure choice; for APIs consumed by multiple clients across domains, or distributed systems, tokens are more practical.",
+          "category": "Auth",
+          "categoryKey": "auth"
+        },
+        {
+          "id": 10,
+          "question": "How do you implement role-based access control (RBAC) in a backend API?",
+          "answer": "RBAC restricts system access based on a user's assigned role (e.g., admin, editor, viewer), where each role is granted a set of permissions. The implementation has two parts: attaching the user's role to the authentication context (typically in the JWT payload or session data) and enforcing permissions in middleware or route handlers before executing business logic. A middleware-based approach in Node.js is clean and reusable — you create a higher-order function that takes allowed roles and returns a middleware function that checks the request's user role, either passing through or responding with 403 Forbidden. For finer-grained control beyond roles, attribute-based access control (ABAC) checks both user attributes and resource attributes (e.g., a user can edit a post only if they are its author). Crucially, authorization checks must happen server-side on every request — the frontend may hide UI elements, but any API endpoint that isn't protected at the HTTP layer can be accessed directly by a malicious client.",
+          "category": "Auth",
+          "categoryKey": "auth",
+          "codeBlock": {
+            "name": "rbac.js",
+            "lang": "Node.js / Express",
+            "code": "const requireRole = (...allowedRoles) => (req, res, next) => {\n  const role = req.user?.role;\n  if (!role || !allowedRoles.includes(role))\n    return res.status(403).json({ error: 'FORBIDDEN' });\n  next();\n};\n\n// Usage\nrouter.delete('/users/:id', requireRole('admin'), deleteUser);\nrouter.put('/posts/:id',  requireRole('admin', 'editor'), updatePost);"
+          }
+        }
+      ]
+    },
+    {
+      "num": "11 – 16",
+      "title": "Databases",
+      "badge": "data layer",
+      "questions": [
+        {
+          "id": 11,
+          "question": "What are the different types of SQL JOINs, and when would you use each?",
+          "answer": "A JOIN combines rows from two or more tables based on a related column. An `INNER JOIN` returns only rows where there is a match in both tables — the most common type for retrieving related data that must exist on both sides. A `LEFT JOIN` (also LEFT OUTER JOIN) returns all rows from the left table and matching rows from the right; non-matching right-side columns are `NULL` — useful when the right-side relationship is optional, such as fetching all users and their orders, including users who have placed no orders. A `RIGHT JOIN` is the mirror of a LEFT JOIN and is rarely necessary since you can always rewrite it as a LEFT JOIN by swapping table order. A `FULL OUTER JOIN` returns all rows from both tables, with NULLs filling gaps where there is no match, useful for finding mismatches or doing reconciliation between two datasets. A `CROSS JOIN` produces a Cartesian product — every combination of rows — which is rarely intentional but has legitimate uses like generating permutations or calendar grids.",
+          "category": "DB",
+          "categoryKey": "db",
+          "codeBlock": {
+            "name": "joins.sql",
+            "lang": "SQL",
+            "code": "-- All users with their orders (users with no orders included)\nSELECT u.name, o.total, o.created_at\nFROM  users u\nLEFT JOIN orders o ON o.user_id = u.id\nORDER BY u.name;\n\n-- Users who have placed at least one order\nSELECT u.name, COUNT(o.id) AS order_count\nFROM  users u\nINNER JOIN orders o ON o.user_id = u.id\nGROUP BY u.id, u.name;"
+          }
+        },
+        {
+          "id": 12,
+          "question": "What is database indexing, and when can an index hurt performance?",
+          "answer": "An index is a data structure (typically a B-tree) that the database maintains alongside a table to allow it to find rows matching a condition without scanning every row — similar to an index at the back of a book. Without an index on a `WHERE` column, the database performs a full table scan (O(n)), which becomes unacceptable at scale. You should create indexes on columns frequently used in `WHERE`, `JOIN ON`, and `ORDER BY` clauses, as well as foreign key columns. Composite indexes on multiple columns can serve queries that filter on all those columns in order — but only from left to right, so column order in the index matters. Indexes hurt performance in two scenarios: first, write operations (`INSERT`, `UPDATE`, `DELETE`) become slower because the index must be updated on every write; a table with ten indexes takes ten times more write overhead than one with none. Second, an index with low selectivity (e.g., a boolean column with 50% true/false) provides little benefit and the query planner may ignore it entirely. Use `EXPLAIN ANALYZE` to verify that your indexes are actually being used.",
+          "category": "DB",
+          "categoryKey": "db"
+        },
+        {
+          "id": 13,
+          "question": "What is the difference between SQL and NoSQL databases, and how do you choose between them?",
+          "answer": "SQL (relational) databases like PostgreSQL and MySQL store data in tables with a predefined schema, enforce relationships via foreign keys, and guarantee ACID transactions — they are ideal for structured data with complex relationships and queries that benefit from JOINs, such as financial systems, user accounts, and e-commerce. NoSQL databases trade schema flexibility and often some consistency for scale, speed, or specialized data models: document stores (MongoDB) store JSON-like documents and are great for hierarchical, variable-schema data; key-value stores (Redis) excel at caching and session storage with microsecond lookups; wide-column stores (Cassandra) handle massive write throughput across distributed nodes; and graph databases (Neo4j) model highly connected data like social networks or recommendation engines. The choice depends primarily on data shape, query patterns, and consistency requirements — not just on scale. Most modern applications use a hybrid approach: PostgreSQL as the primary database and Redis for caching. A common mistake is choosing MongoDB out of familiarity when the data is clearly relational, leading to painful manual relationship management later.",
+          "category": "DB",
+          "categoryKey": "db"
+        },
+        {
+          "id": 14,
+          "question": "What are database transactions and ACID properties?",
+          "answer": "A database transaction is a sequence of operations that must execute as a single, all-or-nothing unit — if any step fails, the entire transaction is rolled back and the database is left unchanged. ACID is the set of properties that guarantee this reliability: Atomicity means every operation in the transaction succeeds or all are rolled back; Consistency means the transaction brings the database from one valid state to another, never leaving it in a corrupt intermediate state; Isolation means concurrent transactions execute as if they were sequential — changes made in an uncommitted transaction are not visible to others (with configurable isolation levels); and Durability means committed transactions persist even through a server crash, thanks to write-ahead logs. Transactions are essential whenever you have multi-step operations that must succeed together — for example, transferring money requires debiting one account and crediting another atomically; if the credit fails after the debit, you've lost money. In Node.js with an ORM like Prisma, you wrap related operations in a `prisma.$transaction([...])` call.",
+          "category": "DB",
+          "categoryKey": "db",
+          "codeBlock": {
+            "name": "transaction.js",
+            "lang": "Node.js / Prisma",
+            "code": "// Atomic money transfer\nawait prisma.$transaction([\n  prisma.account.update({\n    where: { id: fromId },\n    data:  { balance: { decrement: amount } },\n  }),\n  prisma.account.update({\n    where: { id: toId },\n    data:  { balance: { increment: amount } },\n  }),\n]); // Both succeed or both roll back"
+          }
+        },
+        {
+          "id": 15,
+          "question": "What is an ORM, and what are the tradeoffs of using one versus writing raw SQL?",
+          "answer": "An ORM (Object-Relational Mapper) is a library that maps database tables to objects in your programming language, letting you write database queries in code rather than SQL strings — examples include Prisma, TypeORM, Sequelize (Node.js), SQLAlchemy (Python), and ActiveRecord (Ruby). The key benefits are developer productivity (schema migrations, type-safe queries, no SQL string concatenation), built-in protection against SQL injection, and portability across databases. The tradeoffs are that ORMs can generate inefficient queries — especially for complex joins or aggregations — and the abstraction can hide what's actually happening at the database level, making performance debugging harder. Raw SQL gives you complete control and is more efficient for complex analytical queries, but requires more boilerplate and discipline to avoid injection vulnerabilities. A pragmatic approach for most applications is to use an ORM for standard CRUD operations and use raw SQL (or the ORM's raw query escape hatch) for performance-critical or complex queries that the ORM cannot express cleanly.",
+          "category": "DB",
+          "categoryKey": "db"
+        },
+        {
+          "id": 16,
+          "question": "What is the N+1 query problem, and how do you fix it?",
+          "answer": "The N+1 problem occurs when you execute one query to fetch a list of N items, then execute one additional query per item to fetch related data — resulting in N+1 total queries instead of the 2 that would be needed with proper joining. For example, fetching 100 posts and then looping to fetch each post's author with a separate query generates 101 database round-trips. This pattern is easy to accidentally write with ORMs that lazy-load associations by default, and it becomes catastrophic at scale — 100 items means 100 extra queries, 10,000 items means 10,000 extra queries. The fix is eager loading: instruct the ORM to JOIN or batch-load the related data in a single additional query. In Prisma, this is done with the `include` option; in SQL, it's a JOIN; in some frameworks a DataLoader pattern batches N individual lookups into one `WHERE id IN (...)` query. Always profile your queries during development using query logging to catch this before it reaches production.",
+          "category": "DB",
+          "categoryKey": "db",
+          "codeBlock": {
+            "name": "n-plus-one.js",
+            "lang": "Prisma",
+            "code": "// ❌ N+1: 1 query for posts + 1 per post for author\nconst posts = await prisma.post.findMany();\nfor (const post of posts) {\n  post.author = await prisma.user.findUnique({ where: { id: post.authorId } });\n}\n\n// ✅ Eager load: 2 queries total\nconst posts = await prisma.post.findMany({\n  include: { author: true },\n});"
+          }
+        }
+      ]
+    },
+    {
+      "num": "17 – 23",
+      "title": "Server Architecture",
+      "badge": "systems",
+      "questions": [
+        {
+          "id": 17,
+          "question": "What are the key differences between a monolithic and a microservices architecture?",
+          "answer": "A monolith packages all application functionality — authentication, billing, notifications, user management — into a single deployable unit with a shared codebase and database. This is simpler to develop, debug, test, and deploy initially, and is the right starting point for most applications — you don't pay the distributed systems tax until you actually need to. Microservices decompose the application into small, independently deployable services that each own their own data store and communicate over a network (HTTP or a message queue). The benefits — independent scaling, independent deployment, technology heterogeneity per service, fault isolation — only become practical benefits at organizational and technical scale; a team of 5 engineers does not benefit from microservices. The costs are significant: network latency, distributed tracing, eventual consistency, the complexity of coordinating deployments, and service discovery overhead. A practical path is to start as a well-structured monolith, identify bounded contexts where services naturally emerge under real load or team growth, and extract microservices surgically rather than from the start.",
+          "category": "Arch",
+          "categoryKey": "arch"
+        },
+        {
+          "id": 18,
+          "question": "How do you implement pagination in a REST API, and what are the tradeoffs between offset and cursor pagination?",
+          "answer": "Pagination limits how many records are returned per request to prevent overloading the client and database. Offset pagination uses `?page=2&limit=20` (or `?offset=20&limit=20`) and is easy to implement with SQL's `LIMIT` and `OFFSET` clauses. However, offset pagination has a serious flaw with live data: if items are inserted or deleted between page requests, items can be skipped or duplicated — you fetch page 1 (rows 1–20), a new item is inserted at the top, then page 2 (rows 21–40) returns what was actually row 20 before, causing a duplicate. It is also slow on large offsets because the database must scan and discard the skipped rows. Cursor-based pagination uses a stable pointer (typically the last record's ID or timestamp) as the cursor: `?after=cursor_value&limit=20`. It queries `WHERE id > cursor ORDER BY id LIMIT 20`, which uses the index directly and is immune to insertion/deletion drift. Cursor pagination is the correct choice for infinite scroll feeds and any large dataset with live data; offset pagination is acceptable for small, stable datasets or when the user needs to jump to a specific page number.",
+          "category": "API",
+          "categoryKey": "api",
+          "codeBlock": {
+            "name": "cursor-pagination.sql",
+            "lang": "SQL",
+            "code": "-- Cursor pagination: stable and index-efficient\nSELECT id, title, created_at\nFROM   posts\nWHERE  created_at < :cursor   -- cursor from last item\nORDER BY created_at DESC\nLIMIT  20;"
+          }
+        },
+        {
+          "id": 19,
+          "question": "What is the middleware pattern in backend frameworks, and how does the request-response cycle work in Express?",
+          "answer": "Middleware is a function that sits in the middle of the request-response pipeline and has access to the request object, the response object, and the next middleware function in the chain. In Express, a middleware function has the signature `(req, res, next)` — it either calls `next()` to pass control to the subsequent middleware, sends a response to terminate the chain, or calls `next(err)` to skip to the error-handling middleware. This pattern enables clean separation of cross-cutting concerns: authentication, logging, request parsing, rate limiting, and input validation all run as independent, composable middleware before the route handler executes. The order of `app.use()` calls matters — middleware is executed in the sequence it is registered. A 4-argument middleware `(err, req, res, next)` is the error handler and should be placed last. This pipeline architecture makes it easy to add, remove, or reorder behaviors globally or per-route without touching business logic.",
+          "category": "Arch",
+          "categoryKey": "arch",
+          "codeBlock": {
+            "name": "middleware.js",
+            "lang": "Node.js / Express",
+            "code": "app.use(express.json());         // 1. parse body\napp.use(logger);                   // 2. log every request\napp.use(authenticate);             // 3. verify JWT → req.user\napp.use('/api', router);           // 4. route handlers\napp.use((err, req, res, next) => { // 5. error handler (last)\n  res.status(err.status || 500).json({ error: err.message });\n});"
+          }
+        },
+        {
+          "id": 20,
+          "question": "What is event-driven architecture, and how do events differ from direct service calls?",
+          "answer": "In event-driven architecture (EDA), components communicate by emitting events — records of something that happened (e.g., `order.placed`, `user.registered`) — and other components subscribe to and react to those events asynchronously. This is in contrast to direct (synchronous) service calls where service A explicitly calls service B and waits for a response. The key advantage of EDA is temporal and spatial decoupling: the event producer doesn't know who consumes its events, doesn't wait for them to finish, and continues running even if a consumer is unavailable — making the system more resilient and scalable. This pattern is ideal for workflows that span multiple services (placing an order triggers inventory updates, email confirmations, and analytics events simultaneously without chaining synchronous calls). The tradeoffs are increased complexity: debugging is harder because there's no linear call stack, you must handle duplicate event delivery and out-of-order events, and eventual consistency means consumers may lag behind producers. Tools like Kafka, RabbitMQ, AWS SNS/SQS, and Redis Streams are common implementations.",
+          "category": "Arch",
+          "categoryKey": "arch"
+        },
+        {
+          "id": 21,
+          "question": "What is the difference between vertical and horizontal scaling, and what constraints govern each?",
+          "answer": "Vertical scaling (scaling up) means adding more resources to a single machine — more CPU, RAM, or faster storage. It is the simplest approach, requires no application changes, and works well up to a point, but it has a hard ceiling (you can't add infinite CPU to one machine) and a single point of failure. Horizontal scaling (scaling out) means adding more machines (instances) running the same application behind a load balancer to distribute traffic. Horizontal scaling is theoretically limitless and provides fault tolerance — if one instance fails, others continue serving traffic — but it requires the application to be stateless: session state, in-memory caches, and local file uploads must be moved to external shared stores (Redis, S3) because any request might hit any instance. Most modern cloud deployments combine both: run moderately sized instances (vertical) and auto-scale their count based on load (horizontal). The rule of thumb is: scale vertically first until it becomes impractical or uneconomical, then design for horizontal scaling as a necessity rather than prematurely.",
+          "category": "Arch",
+          "categoryKey": "arch"
+        },
+        {
+          "id": 22,
+          "question": "What is a message queue, and what problems does it solve in backend systems?",
+          "answer": "A message queue is a durable, asynchronous communication buffer where producers write messages and consumers read and process them independently. It decouples the rate of production from the rate of consumption — if an email service can only process 100 emails per second but a flash sale generates 5,000 orders per second, a queue absorbs the burst and processes emails at a sustainable pace rather than crashing the service. Message queues also improve reliability: if the email service crashes, unprocessed messages remain in the queue and are retried when it recovers, with no data loss. They enable work distribution across multiple consumers (competing consumers pattern) for horizontal throughput. Common tasks for queues include sending emails/SMS, processing images and videos, generating reports, and any operation that doesn't need to complete synchronously within the HTTP request. Technologies differ by tradeoff: RabbitMQ is excellent for complex routing with acknowledgments; Kafka is a distributed log built for high-throughput, ordered, replayable streams; Redis (BullMQ) is a practical choice for job queues in smaller systems that already use Redis.",
+          "category": "Arch",
+          "categoryKey": "arch"
+        },
+        {
+          "id": 23,
+          "question": "How does a load balancer work, and what are the most common load-balancing algorithms?",
+          "answer": "A load balancer sits in front of a pool of backend servers and distributes incoming requests across them, acting as the single entry point for all traffic. It continuously monitors server health using health checks, removing unhealthy instances from rotation automatically, which provides both scalability and high availability. Round Robin distributes requests sequentially across all instances in order and works well when all servers have similar capacity and request cost. Least Connections routes each new request to the instance with the fewest active connections, which is better when requests vary significantly in processing time — long-running requests won't keep piling onto one server. IP Hash routes requests from the same client IP to the same server, which creates \"sticky sessions\" useful when session state is stored locally on the server (though externalizing session state is a better architectural choice). Weighted Round Robin assigns different traffic percentages to instances by capacity, useful during canary deployments where you want to send 5% of traffic to a new version initially. Layer 7 load balancers (like AWS ALB, Nginx) inspect HTTP headers and routes, enabling URL-based and content-based routing, whereas Layer 4 balancers operate purely at the TCP level.",
+          "category": "Arch",
+          "categoryKey": "arch"
+        }
+      ]
+    },
+    {
+      "num": "24 – 26",
+      "title": "Performance Optimization",
+      "badge": "perf",
+      "questions": [
+        {
+          "id": 24,
+          "question": "What are the main caching strategies used in backend systems, and when would you use each?",
+          "answer": "Caching stores computed or fetched data closer to where it will be consumed so future requests can be served faster. Cache-aside (lazy loading) is the most common pattern: the application checks the cache first, and on a miss, fetches from the database, stores the result in the cache, then returns it — the cache is populated on demand. Write-through updates the cache synchronously whenever the database is written, keeping the cache always warm but adding write latency. Write-back (write-behind) writes to the cache first and asynchronously persists to the database, giving fastest write performance at the risk of data loss if the cache fails. Cache-aside with a TTL (time-to-live) is the default recommendation for most use cases because it is simple, resilient to cache failures (the app falls back to the database), and the TTL provides automatic staleness management. Redis is the dominant in-memory cache store for backend systems. The most common mistake is not defining an invalidation strategy — cache invalidation is notoriously one of the hardest problems in computer science, and stale cache data causing incorrect behavior is a class of bugs that is difficult to reproduce.",
+          "category": "Perf",
+          "categoryKey": "perf",
+          "codeBlock": {
+            "name": "cache-aside.js",
+            "lang": "Node.js / Redis",
+            "code": "async function getUser(id) {\n  const key = `user:${id}`;\n  const cached = await redis.get(key);\n  if (cached) return JSON.parse(cached);\n\n  const user = await db.user.findById(id);\n  await redis.setex(key, 300, JSON.stringify(user)); // 5-min TTL\n  return user;\n}"
+          }
+        },
+        {
+          "id": 25,
+          "question": "What is rate limiting, and how do you implement a token bucket or sliding window algorithm?",
+          "answer": "Rate limiting restricts how many requests a client can make to an API within a time window to protect backend resources from abuse, denial-of-service attacks, and runaway clients. The fixed window algorithm (e.g., 100 requests per minute) is simplest but allows bursting at window boundaries — a client can use 100 requests at 0:59 and another 100 at 1:00. The sliding window algorithm tracks the request timestamps in a rolling window, providing a smoother limit with no boundary burst. The token bucket algorithm gives each client a bucket of tokens that refills at a fixed rate; each request consumes one token, and requests are rejected when the bucket is empty — this naturally allows short bursts while enforcing a long-term average rate. In distributed systems, rate limit state must live in a shared store like Redis (not in process memory, which would give each server instance its own counter). The response to a rate-limited request should be HTTP 429 with a `Retry-After` header indicating when the client may try again, and `X-RateLimit-Limit`/`X-RateLimit-Remaining` headers to inform clients proactively.",
+          "category": "Perf",
+          "categoryKey": "perf",
+          "codeBlock": {
+            "name": "rate-limit.js",
+            "lang": "Node.js / Redis",
+            "code": "// Sliding window with Redis sorted sets\nasync function isRateLimited(ip, limit = 100, windowMs = 60000) {\n  const now  = Date.now();\n  const key  = `rl:${ip}`;\n  const pipe = redis.pipeline();\n  pipe.zremrangebyscore(key, 0, now - windowMs); // evict old\n  pipe.zadd(key, now, now.toString());            // add current\n  pipe.zcard(key);                                // count window\n  pipe.expire(key, 60);\n  const results = await pipe.exec();\n  return results[2][1] > limit;\n}"
+          }
+        },
+        {
+          "id": 26,
+          "question": "What is a CDN, and how does it improve backend API and asset performance?",
+          "answer": "A Content Delivery Network (CDN) is a geographically distributed network of edge servers that cache and serve content from the location physically closest to the end user, reducing latency caused by geographic distance from the origin server. For static assets (images, JavaScript, CSS, fonts), a CDN is transformative — a user in Singapore fetching an image from an origin server in Virginia would experience 200–300ms of network latency; a CDN edge node in Singapore reduces that to single-digit milliseconds. For APIs, CDNs like Cloudflare can cache responses at the edge using Cache-Control headers, which is highly effective for publicly accessible, non-personalized data like product catalogs or public posts. Setting `Cache-Control: public, max-age=3600, s-maxage=86400` tells browsers to cache for 1 hour and CDN edges for 24 hours. The challenge is cache invalidation — CDNs require explicit purging when cached content changes. For personalized or authenticated content, CDN caching is inappropriate without careful configuration (use `private` or `no-store`) to avoid serving one user's data to another.",
+          "category": "Perf",
+          "categoryKey": "perf"
+        }
+      ]
+    },
+    {
+      "num": "27 – 30",
+      "title": "Security & Production Readiness",
+      "badge": "security",
+      "questions": [
+        {
+          "id": 27,
+          "question": "What is SQL injection, how does it work, and how do you prevent it?",
+          "answer": "SQL injection occurs when user-supplied input is interpolated directly into a SQL query string, allowing an attacker to alter the query's structure. For example, if a login query is built as `SELECT * FROM users WHERE email = '${email}'` and the attacker inputs `' OR '1'='1` as the email, the query becomes `WHERE email = '' OR '1'='1'` — which is always true — returning all users and bypassing authentication. In severe cases, attackers can exfiltrate entire databases, modify data, or execute operating system commands. Prevention is simple and absolute: always use parameterized queries (prepared statements) which pass user input as separate, typed parameters that the database driver handles safely without ever interpreting them as SQL syntax. Modern ORMs use parameterized queries by default, which is one of their important security benefits. Never build SQL strings by concatenating user input, and validate/sanitize input as a defense-in-depth measure (not a replacement for parameterized queries). Run your database user with the least privileges necessary — no `DROP TABLE` or admin rights for the application account.",
+          "category": "Sec",
+          "categoryKey": "sec",
+          "codeBlock": {
+            "name": "sql-injection.js",
+            "lang": "Node.js / pg",
+            "code": "// ❌ VULNERABLE — never do this\nconst q = `SELECT * FROM users WHERE email = '${email}'`;\n\n// ✅ SAFE — parameterized query\nconst { rows } = await pool.query(\n  'SELECT * FROM users WHERE email = $1',\n  [email]  // driver handles escaping\n);"
+          }
+        },
+        {
+          "id": 28,
+          "question": "What is CORS, and how do you configure it correctly on a backend server?",
+          "answer": "CORS (Cross-Origin Resource Sharing) is a browser security mechanism that restricts web pages from making requests to a different origin (domain, port, or protocol) than the one that served the page. By default, browsers block cross-origin responses unless the server explicitly permits it via CORS headers. When a React app on `https://app.example.com` calls an API at `https://api.example.com`, the browser sends a preflight `OPTIONS` request asking whether the cross-origin request is allowed; the server must respond with `Access-Control-Allow-Origin`, `Access-Control-Allow-Methods`, and `Access-Control-Allow-Headers`. Configuring CORS correctly means specifying an explicit allowlist of origins (never use `*` with `credentials: true`, as browsers reject this combination), allowing only the HTTP methods and headers your API actually uses, and being aware that credentials (cookies, Authorization headers) require both `Access-Control-Allow-Credentials: true` on the server and `credentials: 'include'` on the client fetch call. CORS is purely a browser enforcement mechanism — it does not protect your API from non-browser clients like Postman or curl, and it is not a substitute for authentication.",
+          "category": "Sec",
+          "categoryKey": "sec",
+          "codeBlock": {
+            "name": "cors.js",
+            "lang": "Node.js / Express",
+            "code": "const cors = require('cors');\n\napp.use(cors({\n  origin:      ['https://app.example.com'],\n  methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],\n  allowedHeaders: ['Content-Type', 'Authorization'],\n  credentials: true,\n}));"
+          }
+        },
+        {
+          "id": 29,
+          "question": "How should environment variables and secrets be managed in a backend application?",
+          "answer": "Environment variables are the standard mechanism for injecting configuration (database URLs, API keys, JWT secrets) into a backend application without hardcoding them in source code — following the Twelve-Factor App's \"store config in the environment\" principle. A `.env` file is used locally with a library like `dotenv` to load variables into `process.env`, but this file must never be committed to source control — add it to `.gitignore` immediately and provide a `.env.example` with placeholder values for documentation. In production, environment variables should be injected by the deployment platform (Vercel, Railway, Heroku, AWS ECS/Lambda environment config) or a dedicated secrets manager like AWS Secrets Manager, HashiCorp Vault, or GCP Secret Manager, which provide audit trails, rotation, and fine-grained access control. The most critical rule is to never log environment variables — an application that prints its configuration at startup might leak database credentials into logs. Rotate secrets regularly, use different values per environment (development, staging, production), and validate that all required environment variables are present at startup so the app fails loudly rather than silently using undefined values.",
+          "category": "Sec",
+          "categoryKey": "sec",
+          "codeBlock": {
+            "name": "env-validate.js",
+            "lang": "Node.js",
+            "code": "// Validate required env vars at startup\nconst required = ['DATABASE_URL', 'JWT_SECRET', 'REDIS_URL'];\nfor (const key of required) {\n  if (!process.env[key])\n    throw new Error(`Missing required env var: ${key}`);\n}\nconsole.log('✓ Environment validated');"
+          },
+          "note": {
+            "type": "warn",
+            "content": "**Security rule:** a `.env` file must always be in `.gitignore` before the first commit. Leaked secrets in git history persist forever — even after deletion — and must be rotated immediately."
+          }
+        },
+        {
+          "id": 30,
+          "question": "What is the difference between logging and monitoring, and what constitutes a production-ready observability setup?",
+          "answer": "Logging records discrete events as they occur — a request was received, a query was executed, an error was thrown — and is most useful for debugging a specific incident after the fact. Monitoring observes the system's aggregate health over time through metrics: request rate, error rate, latency percentiles (P50, P95, P99), CPU/memory utilization, and database connection pool saturation. A production-ready observability setup has three pillars: structured logs (JSON format, not plain text, so they are machine-queryable), metrics (exported to a time-series database like Prometheus or Datadog for alerting and dashboards), and distributed traces (correlation IDs that follow a request across service boundaries, using OpenTelemetry). Alerts should fire on symptoms, not causes — alert on \"error rate above 1%\" or \"P99 latency above 2 seconds\" rather than \"CPU above 80%\", since the metric that matters to users is service quality, not resource usage. Every HTTP response should include a correlation ID header so a user reporting a problem can give you a single ID to trace the exact request through your logs. Use a log aggregation service (Datadog, Grafana Loki, AWS CloudWatch Logs) in production — tailing raw server logs does not scale.",
+          "category": "Sec",
+          "categoryKey": "sec",
+          "codeBlock": {
+            "name": "structured-logging.js",
+            "lang": "Node.js / pino",
+            "code": "const pino = require('pino');\nconst log  = pino({ level: 'info' });\n\n// Structured log entry — machine-queryable JSON\nlog.info({\n  msg:        'request completed',\n  method:     req.method,\n  path:       req.path,\n  statusCode: res.statusCode,\n  durationMs: Date.now() - req.startTime,\n  userId:     req.user?.id,\n  requestId:  req.id,\n});"
+          }
+        }
+      ]
+    }
+  ],
+  "tocOrder": [1,11,21,2,12,22,3,13,23,4,14,24,5,15,25,6,16,26,7,17,27,8,18,28,9,19,29,10,20,30]
+}
